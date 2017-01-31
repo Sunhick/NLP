@@ -1,10 +1,33 @@
-Shakespeare's Sonnets is the title of a collection of 154 sonnets by William Shakespeare, 
-which covers themes such as the passage of time, love, beauty and mortality. The first 126 sonnets are addressed to a young man; the last 28 to a woman.
+Except for computer D, each computer has a TCP/IP protocol stack like
+that in Figure 1.  Computer D is the IP-router; it is connected to
+all 3 networks and therefore has 3 IP addresses and 3 Ethernet
+addresses.  Computer D has a TCP/IP protocol stack similar to that in
+Figure 3, except that it has 3 ARP modules and 3 Ethernet drivers
+instead of 2.  Please note that computer D has only one IP module.
 
-The sonnets were first published in a 1609 quarto with the full stylised title: SHAKE-SPEARES SONNETS. 
-Never before Imprinted. (although sonnets 138 and 144 had previously been published in the 1599 miscellany The Passionate Pilgrim). The quarto ends with "A Lover's Complaint", a narrative poem of 47 seven-line stanzas 
-written in rhyme royal – though some scholars have argued convincingly against Shakespeare's authorship of the poem.[1]
+   The network manager has assigned a unique number, called an IP
+network number, to each of the Ethernets.  The IP network numbers are
+not shown in this diagram, just the network names.
 
-The sonnets to the young man express overwhelming, obsessional love.[2] The main issue of debate has always been whether it remained platonic or became physical.[3] The first 17 poems, traditionally called the procreation sonnets, are addressed to the young man urging him to marry and have children in order to immortalize his beauty by passing it to the next generation.[4] Other sonnets express the speaker's love for the young man; brood upon loneliness, death, and the transience of life; seem to criticise the young man for preferring a rival poet; express ambiguous feelings for the speaker's mistress; and pun on the poet's name. The final two sonnets are allegorical treatments of Greek epigrams referring to the "little love-god" Cupid.
+   When computer A sends an IP packet to computer B, the process is
+identical to the single network example above.  Any communication
+between computers located on a single IP network matches the direct
+routing example discussed previously.
 
-The publisher, Thomas Thorpe, entered the book in the Stationers' Register on 20 May 1609: Tho. Thorpe. Entred for his copie under the handes of master Wilson and master Lownes Wardenes a booke called Shakespeares sonnettes vjd. Whether Thorpe used an authorised manuscript from Shakespeare or an unauthorised copy is unknown. George Eld printed the quarto, and the run was divided between the booksellers William Aspley and John Wright.
+   When computer D and A communicate, it is direct communication.  When
+computer D and E communicate, it is direct communication.  When
+computer D and H communicate, it is direct communication.  This is
+because each of these pairs of computers is on the same IP network.
+
+   However, when computer A communicates with a computer on the far side
+of the IP-router, communication is no longer direct.  A must use D to
+forward the IP packet to the next IP network.  This communication is
+called "indirect".
+
+   This routing of IP packets is done by IP modules and happens
+transparently to TCP, UDP, and the network applications.
+
+   If A sends an IP packet to E, the source IP address and the source
+Ethernet address are A's.  The destination IP address is E's, but
+because A's IP module sends the IP packet to D for forwarding, the
+destination Ethernet address is D's.
