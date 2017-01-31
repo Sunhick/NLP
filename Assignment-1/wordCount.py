@@ -15,7 +15,7 @@ import sys
 import functools
 
 def compose(*functions):
-    return functools.reduce(lambda f, g: lambda x: f(g(x)), functions, lambda x: x)
+    return functools.reduce(lambda f, g: lambda x: g(f(x)), functions, lambda x: x)
 
 class WordCount(object):
     def __init__(self, filename):
@@ -38,17 +38,26 @@ class WordCount(object):
 
     def removeDottedAbbr(self, text):
         # Collapse abbrevations like U.S.A => USA, m.p.h => mph etc
-        removeDottedAbbr = re.compile(r'((?:[a-zA-Z]\.){2,})')
+        removeDottedAbbr = re.compile(r"((?:[a-zA-Z]\.){2,})")
         return removeDottedAbbr.sub(self.__removeDottedAbbr, text)
+
+    def removePunctutationsInNumbers(self, text):
+        # Collapse comma or dot in numbers. 4.5, 10,000
+        return re.sub(r"(\d+)([,.])(\d+)", "\1\3", text)
+
+    def debugOutput(self, text):
+        print("===============\n",text, end="==================\n")
+        return text
 
     def __wc(self):
         # Fix me: Should i ignore apostrophe, Abbrevations, Periods, Numbers(45.45)
         # Pre-process the text 
-        self.textPreProcessPipeline = compose(self.replaceApostophe, self.replaceHyphen, self.removeDottedAbbr)
+        self.textPreProcessPipeline = compose(self.replaceApostophe, self.replaceHyphen, self.removeDottedAbbr, \
+            self.removePunctutationsInNumbers, self.debugOutput)
         
         with open(self.filename) as file:
             data = self.textPreProcessPipeline(file.read())
-
+            
             self.words = len(re.findall(r"\w+", data))
             # print(self.words)
 
