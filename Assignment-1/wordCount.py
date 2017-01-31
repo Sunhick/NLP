@@ -12,6 +12,10 @@ __email__ = "suba5417@colorado.edu"
 import re
 import os
 import sys
+import functools
+
+def compose(*functions):
+    return functools.reduce(lambda f, g: lambda x: f(g(x)), functions, lambda x: x)
 
 class WordCount(object):
     def __init__(self, filename):
@@ -21,20 +25,41 @@ class WordCount(object):
         else:
             raise Exception("File \"{0}\", doesn't exists!".format(filename))
 
+    def __removeDottedAbbr(self, match):
+        return match.group().replace(".", "")
+
+    def replaceApostophe(self, text):
+        # collapse words with apostrophe.
+        return text.replace("\'", "")
+
+    def replaceHyphen(self, text):
+        #  collapse words with hyphens.
+        return text.replace("-", "")
+
+    def removeDottedAbbr(self, text):
+        # Collapse abbrevations like U.S.A => USA, m.p.h => mph etc
+        removeDottedAbbr = re.compile(r'((?:[a-zA-Z]\.){2,})')
+        return removeDottedAbbr.sub(self.__removeDottedAbbr, text)
+
     def __wc(self):
+        # Fix me: Should i ignore apostrophe, Abbrevations, Periods, Numbers(45.45)
+        # Pre-process the text 
+        self.textPreProcessPipeline = compose(self.replaceApostophe, self.replaceHyphen, self.removeDottedAbbr)
+        
         with open(self.filename) as file:
-            # Fix me: Should i ignore apostrophe, Abbrevations, Periods, Numbers(45.45)
-            data = file.read().lower().replace("\'", "").replace(".", "")\
-                    .replace("-", "")
-            # print(data)
-            self.words = len(re.findall(r'\w+', data))
+            data = self.textPreProcessPipeline(file.read())
+
+            self.words = len(re.findall(r"\w+", data))
             # print(self.words)
 
             # Paragraphs are separated by atleast two new lines
-            self.paragraphs = len(re.findall(r'\n{2,}', data)) + 1
+            self.paragraphs = len(re.findall(r"\n{2,}", data)) + 1
 
-            # Sentences are separated by a newline
-            self.sentences = len(re.findall(r'\n', data))
+            # lines are separated by a newline
+            self.lines = len(re.findall(r"\n", data))
+
+            # sentences 
+            self.sentences = len(re.findall(r"[^\s](\.|\!|\?)(?!\w)", data))
 
     @property
     def Paragraphs(self):
@@ -42,7 +67,11 @@ class WordCount(object):
 
     @property
     def Sentences(self):
-        return self.sentences
+        return 100
+
+    @property
+    def Lines(self):
+        return self.lines
 
     @property
     def Words(self):
