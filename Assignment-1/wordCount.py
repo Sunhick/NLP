@@ -17,6 +17,13 @@ import functools
 def compose(*functions):
     return functools.reduce(lambda f, g: lambda x: g(f(x)), functions, lambda x: x)
 
+# Should I do this ? or write a regex ? 
+# If i go with this approach, Should i expand or remove dot ?
+honorifics = {
+"Mr." : "Mr", "Dr.": "Dr", "Rev.": "Rev", "Jr." : "Jr", "Sr.": "Sr",
+"Ms." : "Ms", "Prof." : "Prof"
+}
+
 class WordCount(object):
     def __init__(self, filename):
         if os.path.isfile(filename):
@@ -45,6 +52,12 @@ class WordCount(object):
         # Collapse comma or dot in numbers. 4.5, 10,000
         return re.sub(r"(\d+)([,.])(\d+)", "\1\3", text)
 
+    def replaceHonorifics(self, text):
+        # remove dots in honorifics
+        for e in honorifics:
+            text = text.replace(e, honorifics[e])
+        return text
+
     def debugOutput(self, text):
         print("===============\n",text, end="==================\n")
         return text
@@ -53,7 +66,7 @@ class WordCount(object):
         # Fix me: Should i ignore apostrophe, Abbrevations, Periods, Numbers(45.45)
         # Pre-process the text 
         self.textPreProcessPipeline = compose(self.replaceApostophe, self.replaceHyphen, self.removeDottedAbbr, \
-            self.removePunctutationsInNumbers, self.debugOutput)
+            self.removePunctutationsInNumbers, self.replaceHonorifics, self.debugOutput)
         
         with open(self.filename) as file:
             data = self.textPreProcessPipeline(file.read())
@@ -76,7 +89,7 @@ class WordCount(object):
 
     @property
     def Sentences(self):
-        return 100
+        return self.sentences
 
     @property
     def Lines(self):
