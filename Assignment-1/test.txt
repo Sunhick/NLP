@@ -1,33 +1,30 @@
-Except for computer D, each computer has a TCP/IP protocol stack like
-that in Figure 1.  Computer D is the IP-router; it is connected to
-all 3 networks and therefore has 3 IP addresses and 3 Ethernet
-addresses.  Computer D has a TCP/IP protocol stack similar to that in
-Figure 3, except that it has 3 ARP modules and 3 Ethernet drivers
-instead of 2.  Please note that computer D has only one IP module.
+Over the centuries there has been much speculation surrounding various aspects of Shakespeare's life including his religious affiliation, sexual orientation, sources for collaborations, authorship of and chronology of the plays and sonnets. Many of the dates of play performances, when they were written, adapted or revised and printed are imprecise. This biography attempts only to give an overview of his life, while leaving the more learned perspectives to the countless scholars and historians who have devoted their lives to the study and demystification of the man and his works.
 
-   The network manager has assigned a unique number, called an IP
-network number, to each of the Ethernets.  The IP network numbers are
-not shown in this diagram, just the network names.
 
-   When computer A sends an IP packet to computer B, the process is
-identical to the single network example above.  Any communication
-between computers located on a single IP network matches the direct
-routing example discussed previously.
+England's celebration of their patron Saint George is on 23 April, which is also the day claimed to be the birth date of Shakespeare. Although birth and death dates were not recorded in Shakespeare's time, churches did record baptisms and burials, usually a few days after the actual event. The infant William was baptised on 26 April 1564 in the parish church Holy Trinity of Stratford upon Avon. He lived with his fairly well-to-do parents on Henley Street, the first of the four sons born to John Shakespeare (c1530-1601) and Mary Arden (c1540-1608), who also had four daughters. John Shakespeare was a local businessman and also involved in municipal affairs as Alderman and Bailiff, but a decline in his fortunes in his later years surely had an effect on William.
 
-   When computer D and A communicate, it is direct communication.  When
-computer D and E communicate, it is direct communication.  When
-computer D and H communicate, it is direct communication.  This is
-because each of these pairs of computers is on the same IP network.
 
-   However, when computer A communicates with a computer on the far side
-of the IP-router, communication is no longer direct.  A must use D to
-forward the IP packet to the next IP network.  This communication is
-called "indirect".
+In his younger years Shakespeare attended the Christian Holy Trinity church, the now famous elegant limestone cross shaped cathedral on the banks of the Avon river, studying the Book of Common Prayer and the English Bible. In 1605 he became lay rector when he paid 440 Pounds towards its upkeep, hence why he is buried in the chancel. Early on Shakespeare likely attended the Elizabethan theatrical productions of travelling theatre troups, come to Stratford to entertain the local official townsmen, including the Queen's Men, Worcester's Men, Leicester's Men, and Lord Strange's Men. There is also the time when Queen Elizabeth herself visited nearby Kenilworth Castle and Shakespeare, said to have been duly impressed by the procession, recreated it in some of his later plays.
 
-   This routing of IP packets is done by IP modules and happens
-transparently to TCP, UDP, and the network applications.
+Although enrolment registers did not survive, around the age of eleven Shakespeare probably entered the grammar school of Stratford, King's New School, where he would have studied theatre and acting, as well as Latin literature and history. When he finished school he might have apprenticed for a time with his father, but there is also mention of his being a school teacher. The next record of his life is in 1582, when still a minor at the age of eighteen and requiring his father's consent, Shakespeare and Anne Hathaway (1556-1623) married in the village of Temple Grafton. Baptisms of three children were recorded; Susanna (1583-1649), who went on to marry noted physician John Hall, and twins Judith (1585-1662) who married Richard Quiney, and Hamnet (1585-1596) his only son and heir who died at the age of eleven.
 
-   If A sends an IP packet to E, the source IP address and the source
-Ethernet address are A's.  The destination IP address is E's, but
-because A's IP module sends the IP packet to D for forwarding, the
-destination Ethernet address is D's.
+
+It is not exactly clear what Shakespeare was doing in the first few years after the marriage, but he did go to London and worked at The Globe theatre, possibly as one of the Queen's Men whose works were harshly anti Catholic in a time of rising Protestantism. He was writing poems and plays, and his involvement with theatre troupes and acting is disparagingly condemned in a 1592 pamphlet that was distributed in London, attributed to Robert Green the playwright titled "Groats Worth of Witte" haughtily attacking Shakespeare as an "upstart crow";
+
+By 1593 the plague was haunting London and many who were able fled the teeming city for the cleansing airs of open country. While it was a time for many upstart theatres, the popular public entertainment of the day, they were often shut down and forbidden to open for stretches of time. Shakespeare probably spent these dark days travelling between London, Stratford, and the provinces, which gave him time to pen many more plays and sonnets. Among the first of his known printed works is the comedic and erotically charged Ovidian narrative poem Venus and Adonis (1593). It was wildly popular, dedicated with great esteem to his patron Henry Wriothesly, third earl of Southampton, the young man that some say Shakespeare may have had more than platonic affection for. It was followed by the much darker The Rape of Lucrece in 1594, The Passionate Pilgrim in 1599 and the allegorical The Phoenix and the Turtle (1601).
+
+
+At this time of prolific writing, Shakespeare began his association until his death with The Lord Chamberlain's Men. With the accession of James I they became the King's Men, who bought and performed most of Shakespeare's plays. The troupe included his friend and actor Richard Burbage. They performed frequently at court, and in the theatres that Shakespeare was co-owner of including the Blackfriars, The Theatre, and The Globe in London until it burnt down during a performance of King Henry VIII. It is said that Shakespeare himself acted in a number of roles including the ghost in Hamlet and Old Adam in As You Like It. In the late 1590s he bought `New Place' on Chapel Street in Stratford, one of his many real estate investments.
+
+
+Shakespeare wrote most of his plays as `quarto texts', that being on a sheet of paper folded four ways. A few of his plays were printed in his lifetime, though they appeared more voluminously after his death, sometimes plagiarised and often changed at the whim of the printer. First Folio would be the first collection of his dramatic works, a massive undertaking to compile thirty-six plays from the quarto texts, playbooks, transcriptions, and the memories of actors. The approximately nine hundred page manuscript took about two years to complete and was printed in 1623 as Mr. William Shakespeares Comedies, Histories, & Tragedies. It also featured on the frontispiece the famous engraved portrait of Shakespeare said to be by Martin Droeshout (1601-c1651).
+
+
+Under the favour of the court The Kings' Men became the eminent company of the day. Most likely Anne and the children lived in Stratford while Shakespeare spent his time travelling between Stratford and London, dealing with business affairs and writing and acting. In 1616 his daughter Judith married Quiney who subsequently admitted to fornication with Margaret Wheeler, and Shakespeare took steps to bequeath a sum to Judith in her own name. William Shakespeare died on 23 April 1616, according to his monument, and lies buried in the chancel of the Holy Trinity Church in Stratford upon Avon. While there is little known of her life, Anne Hathaway outlived her husband by seven years, dying in 1623 and is buried beside him. It is not clear as to how or why Shakespeare died, but in 1664 the reverend John Ward, vicar of Stratford recorded that "Shakespeare, Drayton and Ben Johnson had a merie meeting, and itt seems drank too hard, for Shakespeare died of a feavour there contracted." His tombstone is inscribed with the following epitaph;
+
+It is generally agreed that most of the Shakespearean Sonnets were written in the 1590s, some printed at this time as well. Others were written or revised right before being printed. 154 sonnets and "A Lover's Complaint" were published by Thomas Thorpe as Shake-speares Sonnets in 1609. The order, dates, and authorship of the Sonnets have been much debated with no conclusive findings. Many have claimed autobiographical details from them, including sonnet number 145 in reference to Anne. The dedication to "Mr. W.H." is said to possibly represent the initials of the third earl of Pembroke William Herbert, or perhaps being a reversal of Henry Wriothesly's initials. Regardless, there have been some unfortunate projections and interpretations of modern concepts onto centuries old works that, while a grasp of contextual historical information can certainly lend to their depth and meaning, can also be enjoyed as valuable poetical works that have transcended time and been surpassed by no other.
+
+
+Evoking Petrarch's style and lyrically writing of beauty, mortality, and love with its moral anguish and worshipful adoration of a usually unattainable love, the first 126 sonnets are addressed to a young man, sonnets 127-152 to a dark lady. Ever the dramatist Shakespeare created a profound intrigue to scholars and novices alike as to the identities of these people.
+
+Some probably inspired by Shakespeare's study of Lives (trans.1597) by Greek historian and essayist Plutarch and Raphael Holinshed's Chronicles (1587). Some are reworkings of previous stories, many based on English or Roman history. The dates given here are when they are said to have been first performed, followed by approximate printing dates in brackets, listed in chronological order of performance.

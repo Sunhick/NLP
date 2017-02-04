@@ -46,7 +46,7 @@ class WordCount(object):
     def removeDottedAbbr(self, text):
         # Collapse abbrevations like U.S.A => USA, m.p.h => mph etc
         # removeDottedAbbr = re.compile(r"((?:[a-zA-Z]\.){2,})") # doesn't keep the last dot 
-        removeDottedAbbr = re.compile(r"(?:[a-zA-Z]\.[a-zA-Z]?){2,}") # keeps the last dot
+        removeDottedAbbr = re.compile(r"(?:[a-zA-Z]\.[a-zA-Z]?\.?){2,}") # keeps the last dot
         return removeDottedAbbr.sub(self.__removeDottedAbbr, text)
 
     def removePunctutationsInNumbers(self, text):
