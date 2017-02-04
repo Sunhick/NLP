@@ -67,7 +67,7 @@ class WordCount(object):
         # Fix me: Should i ignore apostrophe, Abbrevations, Periods, Numbers(45.45)
         # Pre-process the text 
         self.textPreProcessPipeline = compose(self.replaceApostophe, self.replaceHyphen, self.removeDottedAbbr, \
-            self.removePunctutationsInNumbers, self.replaceHonorifics, self.debugOutput)
+            self.removePunctutationsInNumbers, self.replaceHonorifics) #, self.debugOutput)
         
         with open(self.filename) as file:
             data = self.textPreProcessPipeline(file.read())
