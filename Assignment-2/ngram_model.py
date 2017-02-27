@@ -48,6 +48,7 @@ def GetSmoothedProbabilities(word):
 
 # Or GetBigramAndSmoothedProb()
 def GetUnigramSentenceProbability(sentence):
+    prob = 0
     for word in sentence.split():
         prob += math.log10(GetUnigramProbabilities(word))
 
@@ -55,6 +56,7 @@ def GetUnigramSentenceProbability(sentence):
 
 def GetBigramSentenceProbability(sentence):
     tokens = sentence.split()
+    prob = 0
     for biword in GetNgrams(tokens, 2):
         prob += GetBigramProbabilities(biword)
 
