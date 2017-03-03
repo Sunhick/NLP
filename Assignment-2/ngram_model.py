@@ -21,11 +21,14 @@ from copy import deepcopy
 unigramsCounter = dict()
 bigramsCounter = dict()
 
+SENTENCE_BEGIN = "<s>"
+SENTENCE_END = "</s>"
+
 def GetNgrams(tokens, ngram):
     # begining of the sentence
-    tokens.insert(0, "<s>")
+    tokens.insert(0, SENTENCE_BEGIN)
     # end of sentence token
-    tokens.append("</s>")
+    tokens.append(SENTENCE_END)
     return zip(*[tokens[i:] for i in range(ngram)])
     
 
@@ -64,7 +67,12 @@ def GetBigramSentenceProbability(sentence):
     tokens = sentence.split()
     prob = 0.0
     for bigram in GetNgrams(tokens, 2):
-        prob += math.log10(GetBigramProbabilities(bigram))
+        p = GetBigramProbabilities(bigram)
+        if p == 0:
+            prob = 0
+            break
+        else:
+            prob += math.log10(p)
     return prob
 
 def GetSmoothedSentenceProbability(sentence):
@@ -106,11 +114,12 @@ def main(cmdline):
             sentence = sentence.lower()
             uniProb = GetUnigramSentenceProbability(sentence)
             biProb = GetBigramSentenceProbability(sentence)
-            #biSmoothProb = GetSmoothedSentenceProbability(sentence)
+            biSmoothProb = GetSmoothedSentenceProbability(sentence)
 
             print("S = ", sentence)
             print("Unigrams: logprob(S) = ", uniProb)
-            #print("Bigrams: logprob(S) = ", biProb)
+            print("Bigrams: logprob(S) = ", biProb)
+            print("Bigrams Smoothing: logprob(S) = ", biSmoothProb)
 
 if __name__ == '__main__':
     main(sys.argv[1:])
