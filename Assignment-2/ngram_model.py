@@ -18,7 +18,6 @@ from copy import deepcopy
 # class Ngram(object):
 #     def __init__(self):
 #         pass
-
 unigramsCounter = dict()
 bigramsCounter = dict()
 
@@ -38,32 +37,42 @@ def GetBigramCounts(word):
 
 # Or GetUnigramAndBigramCounts()
 def GetUnigramProbabilities(word):
-    pass
+    prob = float(GetUnigramCounts(word)) / len(unigramsCounter)
+    return prob
 
-def GetBigramProbabilities(word):
-    pass
+def GetBigramProbabilities(bigram):
+    prob = 0.0
+    first,_ = bigram
+    prob = float(GetBigramCounts(bigram))/GetUnigramCounts((first,))
+    return prob
 
 def GetSmoothedProbabilities(word):
-    pass
+    V = len(unigramsCounter)
+    k = .0001
+    prob = float(GetBigramCounts(word)+k)/(GetUnigramCounts(word)+V)
+    return prob
 
 # Or GetBigramAndSmoothedProb()
 def GetUnigramSentenceProbability(sentence):
-    prob = 0
+    prob = 0.0
     for word in sentence.split():
-        prob += math.log10(GetUnigramProbabilities(word))
+        prob += math.log10(GetUnigramProbabilities((word,)))
 
     return prob
 
 def GetBigramSentenceProbability(sentence):
     tokens = sentence.split()
-    prob = 0
-    for biword in GetNgrams(tokens, 2):
-        prob += GetBigramProbabilities(biword)
-
+    prob = 0.0
+    for bigram in GetNgrams(tokens, 2):
+        prob += math.log10(GetBigramProbabilities(bigram))
     return prob
 
 def GetSmoothedSentenceProbability(sentence):
-    pass
+    prob = 0.0
+    for word in sentence.split():
+        prob += math.log10(GetSmoothedProbabilities(word))
+
+    return prob
 
 def UpdateCounter(tokens, counter):
     for token in tokens:
@@ -74,13 +83,17 @@ def UpdateCounter(tokens, counter):
     return counter
 
 def main(cmdline):
+    # use the global variables 
+    global unigramsCounter
+    global bigramsCounter
     trainingFile = cmdline[0]
     testFile = cmdline[1]
 
     with open(trainingFile, 'r') as trainFile:
         for sentence in trainFile:
-            unitokens = sentence.lower().split()
-            bitokens = GetNgrams(deepcopy(unitokens), 2)
+            tokens = sentence.lower().split()
+            unitokens = GetNgrams(deepcopy(tokens), 1)
+            bitokens = GetNgrams(deepcopy(tokens), 2)
 
             unigramsCounter = UpdateCounter(unitokens, unigramsCounter)
             bigramsCounter = UpdateCounter(bitokens, bigramsCounter)
@@ -93,11 +106,11 @@ def main(cmdline):
             sentence = sentence.lower()
             uniProb = GetUnigramSentenceProbability(sentence)
             biProb = GetBigramSentenceProbability(sentence)
-            biSmoothProb = GetSmoothedSentenceProbability(sentence)
+            #biSmoothProb = GetSmoothedSentenceProbability(sentence)
 
             print("S = ", sentence)
             print("Unigrams: logprob(S) = ", uniProb)
-            print("Bigrams: logprob(S) = ", biProb)
+            #print("Bigrams: logprob(S) = ", biProb)
 
 if __name__ == '__main__':
     main(sys.argv[1:])
