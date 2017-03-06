@@ -92,14 +92,8 @@ def GetBigramSentenceProbability(sentence):
         try:
             prob += math.log10(GetBigramProbabilities(bigram))
         except ValueError:
+            # If p=0, log10(p) will throw exception. Log10(0) is undefined
             return 0
-        # p = GetBigramProbabilities(bigram)
-        # if p == 0:
-        #     # if probability of one of the word is zero, 
-        #     # then the probability of entire sentence is zero.
-        #     # Probability of unseen word is zero
-        #     return 0
-        # prob += math.log10(p)
     return prob
 
 def GetSmoothedSentenceProbability(sentence):
