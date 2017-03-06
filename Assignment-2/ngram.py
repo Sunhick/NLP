@@ -109,12 +109,14 @@ def main(cmdline):
     # on sentence boundary (as per write up).
     with open(trainingFile, 'r') as trainFile:
         for sentence in trainFile:
+            # make it case insensitive by converting to lower case.
+            # strip the new lines either at begin or at the end of sentence.
+            # extract words by splitting them on space delimiter.
             tokens = sentence.lower().strip().split()
-            #if lastword:
-            #    tokens.insert(0, lastword)
+            # create unigrams and bigrams
             unitokens = GetNgrams(deepcopy(tokens), 1)
             bitokens = GetNgrams(deepcopy(tokens), 2)
-            #lastword = tokens[-1]
+            # update the counters
             unigramsCounter = UpdateCounter(unitokens, unigramsCounter)
             bigramsCounter = UpdateCounter(bitokens, bigramsCounter)
 
