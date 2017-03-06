@@ -65,9 +65,14 @@ def GetBigramProbabilities(bigram):
     prob = float(GetBigramCounts(bigram))/GetUnigramCounts((first,))
     return prob
 
-def GetSmoothedProbabilities(word):
+def GetSmoothedProbabilities(bigram):
     V = len(unigramsCounter)
-    prob = float(GetBigramCounts(word)+K)/(GetUnigramCounts(word)+V)
+    first, _ = bigram
+    # print("bigram word: ", bigram)
+    # print("bigram count: ", GetBigramCounts(bigram))
+    # print("unigram count: ", GetUnigramCounts((first,)))
+    prob = float(GetBigramCounts(bigram)+K)/(GetUnigramCounts((first,))+V)
+    # print("p=", prob)
     return prob
 
 # Or GetBigramAndSmoothedProb()
@@ -84,20 +89,24 @@ def GetUnigramSentenceProbability(sentence):
 def GetBigramSentenceProbability(sentence):
     prob = 0.0
     for bigram in GetNgrams(sentence.split(), 2):
-        p = GetBigramProbabilities(bigram)
-        if p == 0:
-            # if probability of one of the word is zero, 
-            # then the probability of entire sentence is zero.
-            # Probability of unseen word is zero
+        try:
+            prob += math.log10(GetBigramProbabilities(bigram))
+        except ValueError:
             return 0
-        prob += math.log10(p)
+        # p = GetBigramProbabilities(bigram)
+        # if p == 0:
+        #     # if probability of one of the word is zero, 
+        #     # then the probability of entire sentence is zero.
+        #     # Probability of unseen word is zero
+        #     return 0
+        # prob += math.log10(p)
     return prob
 
 def GetSmoothedSentenceProbability(sentence):
     prob = 0.0
-    for word in GetNgrams(sentence.split(), 2):
+    for bigram in GetNgrams(sentence.split(), 2):
         # Probability of unseen word is not zero, but negligible
-        prob += math.log10(GetSmoothedProbabilities(word))
+        prob += math.log10(GetSmoothedProbabilities(bigram))
 
     return prob
 
@@ -146,10 +155,10 @@ def main(cmdline):
             biProb = GetBigramSentenceProbability(sentence)
             biSmoothProb = GetSmoothedSentenceProbability(sentence)
 
-            print("S = ", line.strip())
-            print("Unigrams: logprob(S) = ", "{:.4f}".format(uniProb))
-            print("Bigrams: logprob(S) = ", "undefined" if biProb==0 else "{:.4f}".format(biProb))
-            # print("Bigrams Smoothing: logprob(S) = ", "{:.4f}".format(biSmoothProb))
+            print("S =", line.strip())
+            print("Unigrams: logprob(S) =", "{:.4f}".format(uniProb))
+            print("Bigrams: logprob(S) =", "undefined" if biProb==0 else "{:.4f}".format(biProb))
+            print("Smoothed Bigrams: logprob(S) =", "{:.4f}".format(biSmoothProb))
             print()
 
 if __name__ == '__main__':

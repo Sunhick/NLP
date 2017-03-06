@@ -1,0 +1,249 @@
+S = And the nose on Mr. Courter 's face grows .
+Unigrams: logprob(S) = -26.9577
+Bigrams: logprob(S) = undefined
+Smoothed Bigrams: logprob(S) = -55.4307
+
+S = Who 's telling the truth ?
+Unigrams: logprob(S) = -18.8061
+Bigrams: logprob(S) = -10.9778
+Smoothed Bigrams: logprob(S) = -25.8469
+
+S = A seat on the Chicago Board of Trade was sold for $ 350,000 , down $ 16,000 from the previous sale last Friday .
+Unigrams: logprob(S) = -67.3763
+Bigrams: logprob(S) = undefined
+Smoothed Bigrams: logprob(S) = -129.0395
+
+S = But , analysts say , Asian cooperation is n't likely to parallel the European Common Market approach .
+Unigrams: logprob(S) = -51.1950
+Bigrams: logprob(S) = undefined
+Smoothed Bigrams: logprob(S) = -104.7894
+
+S = In fact , the student had the answers to almost all of the 40 questions in that section .
+Unigrams: logprob(S) = -47.3235
+Bigrams: logprob(S) = undefined
+Smoothed Bigrams: logprob(S) = -85.3546
+
+S = And most disturbing , it is educators , not students , who are blamed for much of the wrongdoing .
+Unigrams: logprob(S) = -50.2832
+Bigrams: logprob(S) = undefined
+Smoothed Bigrams: logprob(S) = -104.5173
+
+S = And sales of test-coaching booklets for classroom instruction are booming .
+Unigrams: logprob(S) = -34.3066
+Bigrams: logprob(S) = undefined
+Smoothed Bigrams: logprob(S) = -77.3546
+
+S = They found students in an advanced class a year earlier who said she gave them similar help , although because the case was n't tried in court , this evidence was never presented publicly .
+Unigrams: logprob(S) = -101.7225
+Bigrams: logprob(S) = undefined
+Smoothed Bigrams: logprob(S) = -212.1232
+
+S = I believe in the system .
+Unigrams: logprob(S) = -14.8300
+Bigrams: logprob(S) = undefined
+Smoothed Bigrams: logprob(S) = -28.6071
+
+S = `` She said something like ` You just want to make it easy for the school . '
+Unigrams: logprob(S) = -49.9275
+Bigrams: logprob(S) = undefined
+Smoothed Bigrams: logprob(S) = -104.9805
+
+S = New York-based Alleghany is an insurance and financial services concern .
+Unigrams: logprob(S) = -33.0550
+Bigrams: logprob(S) = undefined
+Smoothed Bigrams: logprob(S) = -56.8617
+
+S = Among other Connecticut banks whose shares trade in the OTC market , Society for Savings Bancorp , based in Hartford , saw its stock rise 1 3\/4 to 18 1\/4 .
+Unigrams: logprob(S) = -92.9648
+Bigrams: logprob(S) = undefined
+Smoothed Bigrams: logprob(S) = -178.5239
+
+S = The guild began a strike against the TV and movie industry in March 1988 .
+Unigrams: logprob(S) = -42.2672
+Bigrams: logprob(S) = undefined
+Smoothed Bigrams: logprob(S) = -87.3081
+
+S = Title X funds are the single largest source of federal funding for family-planning services , according to the opinion by the Second U.S. Circuit Court of Appeals in New York .
+Unigrams: logprob(S) = -89.7493
+Bigrams: logprob(S) = undefined
+Smoothed Bigrams: logprob(S) = -160.1340
+
+S = Yesterday 's announcement was made after markets closed .
+Unigrams: logprob(S) = -26.5447
+Bigrams: logprob(S) = undefined
+Smoothed Bigrams: logprob(S) = -54.5679
+
+S = But some of the TV stations that bought `` Cosby '' reruns for record prices two years ago are n't laughing much these days .
+Unigrams: logprob(S) = -72.1758
+Bigrams: logprob(S) = undefined
+Smoothed Bigrams: logprob(S) = -130.4338
+
+S = Temple also said Sea Containers ' plan raises `` numerous legal , regulatory , financial and fairness issues , '' but did n't elaborate .
+Unigrams: logprob(S) = -73.0974
+Bigrams: logprob(S) = undefined
+Smoothed Bigrams: logprob(S) = -145.6627
+
+S = Such belts already are required for the vehicles ' front seats .
+Unigrams: logprob(S) = -36.7705
+Bigrams: logprob(S) = undefined
+Smoothed Bigrams: logprob(S) = -77.0160
+
+S = Currently , both Massachusetts and Connecticut , where most of Bank of New England 's operations are , allow interstate banking only within New England .
+Unigrams: logprob(S) = -73.4409
+Bigrams: logprob(S) = undefined
+Smoothed Bigrams: logprob(S) = -145.3254
+
+S = The fast-food company said its decision was based upon discussions with a shareholder group , Giant Group Ltd. , `` in an effort to resolve certain disputes with the company . ''
+Unigrams: logprob(S) = -89.5884
+Bigrams: logprob(S) = undefined
+Smoothed Bigrams: logprob(S) = -115.2647
+
+S = `` I think the market had been expecting the Fed to ease sooner and a little more than it has to date , '' said Robert Johnson , vice president of global markets for Bankers Trust Co .
+Unigrams: logprob(S) = -106.4681
+Bigrams: logprob(S) = undefined
+Smoothed Bigrams: logprob(S) = -196.6742
+
+S = And construction also was described as slow in most areas .
+Unigrams: logprob(S) = -30.7452
+Bigrams: logprob(S) = undefined
+Smoothed Bigrams: logprob(S) = -65.7038
+
+S = They will mature Dec. 21 .
+Unigrams: logprob(S) = -18.0710
+Bigrams: logprob(S) = undefined
+Smoothed Bigrams: logprob(S) = -34.1382
+
+S = Economic news had little effect on financial markets .
+Unigrams: logprob(S) = -27.2140
+Bigrams: logprob(S) = undefined
+Smoothed Bigrams: logprob(S) = -59.0279
+
+S = Bond prices were up .
+Unigrams: logprob(S) = -13.7432
+Bigrams: logprob(S) = -8.9933
+Smoothed Bigrams: logprob(S) = -19.5583
+
+S = The U.S. says it is anxious for results .
+Unigrams: logprob(S) = -22.9570
+Bigrams: logprob(S) = undefined
+Smoothed Bigrams: logprob(S) = -45.0052
+
+S = `` Just to say the distribution system is wrong does n't mean anything , '' says a Ministry of International Trade and Industry official .
+Unigrams: logprob(S) = -69.2318
+Bigrams: logprob(S) = undefined
+Smoothed Bigrams: logprob(S) = -123.2631
+
+S = `` Little by little , there is progress , '' says the MITI official .
+Unigrams: logprob(S) = -39.0721
+Bigrams: logprob(S) = undefined
+Smoothed Bigrams: logprob(S) = -82.0710
+
+S = In addition , of course , some of the Japanese investments involved outright purchase of small U.S. firms .
+Unigrams: logprob(S) = -49.8199
+Bigrams: logprob(S) = undefined
+Smoothed Bigrams: logprob(S) = -73.4762
+
+S = Hudson General Corp. 's president and chief executive officer , Alan J. Stearn , resigned .
+Unigrams: logprob(S) = -47.9870
+Bigrams: logprob(S) = undefined
+Smoothed Bigrams: logprob(S) = -72.1923
+
+S = She took her business to First Atlanta .
+Unigrams: logprob(S) = -22.3860
+Bigrams: logprob(S) = undefined
+Smoothed Bigrams: logprob(S) = -46.4307
+
+S = `` These days , banking customers walk in the door expecting you to have a package especially for them , '' Ms. Moore says .
+Unigrams: logprob(S) = -70.6852
+Bigrams: logprob(S) = undefined
+Smoothed Bigrams: logprob(S) = -121.4527
+
+S = History , after all , is not on his side .
+Unigrams: logprob(S) = -28.1150
+Bigrams: logprob(S) = undefined
+Smoothed Bigrams: logprob(S) = -56.3680
+
+S = A drop below that 3 % benchmark `` has always been a strong warning sign that stocks are fully valued , '' says Mr. Boesel of T. Rowe Price .
+Unigrams: logprob(S) = -88.6644
+Bigrams: logprob(S) = undefined
+Smoothed Bigrams: logprob(S) = -160.5865
+
+S = The company 's work force will fall to about 400 people .
+Unigrams: logprob(S) = -32.0990
+Bigrams: logprob(S) = undefined
+Smoothed Bigrams: logprob(S) = -64.8323
+
+S = In his return toast to Mr. Nixon , Mr. Yang said the relationship had reached a `` stalemate . ''
+Unigrams: logprob(S) = -54.3709
+Bigrams: logprob(S) = undefined
+Smoothed Bigrams: logprob(S) = -96.4954
+
+S = Mr. Nixon was to leave China today .
+Unigrams: logprob(S) = -22.2718
+Bigrams: logprob(S) = undefined
+Smoothed Bigrams: logprob(S) = -44.5755
+
+S = Also , Mr. Vargas was barred from association with any NASD member .
+Unigrams: logprob(S) = -37.2851
+Bigrams: logprob(S) = undefined
+Smoothed Bigrams: logprob(S) = -51.8396
+
+S = Mr. Otero , who apparently has an unpublished number , also could n't be reached .
+Unigrams: logprob(S) = -44.7271
+Bigrams: logprob(S) = undefined
+Smoothed Bigrams: logprob(S) = -63.3990
+
+S = Officials of Triton could n't be reached for comment .
+Unigrams: logprob(S) = -27.6330
+Bigrams: logprob(S) = undefined
+Smoothed Bigrams: logprob(S) = -42.5580
+
+S = Also , Mr. Canepa received a two-week suspension `` in a principal capacity . ''
+Unigrams: logprob(S) = -40.6772
+Bigrams: logprob(S) = undefined
+Smoothed Bigrams: logprob(S) = -72.3963
+
+S = `` We do n't think there is cause for concern at the moment . ''
+Unigrams: logprob(S) = -40.3052
+Bigrams: logprob(S) = undefined
+Smoothed Bigrams: logprob(S) = -65.4555
+
+S = While the minimum wage had traditionally been pegged at half the average U.S. manufacturing wage , the level of $ 4.25 an hour in 1991 will still be less than 35 % of average factory pay , Mr. Yang said .
+Unigrams: logprob(S) = -117.4910
+Bigrams: logprob(S) = undefined
+Smoothed Bigrams: logprob(S) = -207.9163
+
+S = Not only is development of the new company 's initial machine tied directly to Mr. Cray , so is its balance sheet .
+Unigrams: logprob(S) = -65.1661
+Bigrams: logprob(S) = undefined
+Smoothed Bigrams: logprob(S) = -122.0691
+
+S = `` We 're willing to negotiate , '' says Dennis Gillespie , executive vice president of marketing .
+Unigrams: logprob(S) = -51.1213
+Bigrams: logprob(S) = undefined
+Smoothed Bigrams: logprob(S) = -78.1883
+
+S = This is a student .
+Unigrams: logprob(S) = -11.6359
+Bigrams: logprob(S) = -7.9645
+Smoothed Bigrams: logprob(S) = -16.4897
+
+S = There is no question that these three computers were placed under the limit .
+Unigrams: logprob(S) = -40.0022
+Bigrams: logprob(S) = -20.7102
+Smoothed Bigrams: logprob(S) = -50.5392
+
+S = Ford began to put out a plan .
+Unigrams: logprob(S) = -22.2504
+Bigrams: logprob(S) = -12.8912
+Smoothed Bigrams: logprob(S) = -29.6809
+
+S = Workers described `` clouds of blue dust '' that hung over parts of the factory , even though exhaust fans ventilated the area .
+Unigrams: logprob(S) = -75.7734
+Bigrams: logprob(S) = -30.9850
+Smoothed Bigrams: logprob(S) = -89.0111
+
+S = Both proponents and critics say that the talks will be most successful if negotiators start by focusing on the areas that can be most easily changed .
+Unigrams: logprob(S) = -81.4030
+Bigrams: logprob(S) = -34.4597
+Smoothed Bigrams: logprob(S) = -95.5621
