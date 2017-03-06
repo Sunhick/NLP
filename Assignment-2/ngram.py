@@ -46,7 +46,17 @@ def GetBigramCounts(word):
 
 # Or GetUnigramAndBigramCounts()
 def GetUnigramProbabilities(word):
-    prob = float(GetUnigramCounts(word)) / len(unigramsCounter)
+    # eliminate the sentence markers(-2)
+    # L = len(unigramsCounter)-2
+    L = sum(unigramsCounter.values()) - unigramsCounter[(SENTENCE_BEGIN,)] - unigramsCounter[(SENTENCE_END,)]
+    # print("length=", L)
+    # print("begin=",unigramsCounter[(SENTENCE_BEGIN,)])
+    # print("end=",unigramsCounter[(SENTENCE_END,)])
+    # print("total=",sum(unigramsCounter.values()))
+    # print("count=",GetUnigramCounts(word))
+    # print("word=", word)
+    # print("-----------------")
+    prob = float(GetUnigramCounts(word)) / L
     return prob
 
 def GetBigramProbabilities(bigram):
@@ -130,16 +140,16 @@ def main(cmdline):
     # Test the Ngram model on test file and calculate the 
     # sentence prediction probability
     with open(testFile, 'r') as testFile:
-        for sentence in testFile:
-            sentence = sentence.lower().strip()
+        for line in testFile:
+            sentence = line.lower().strip()
             uniProb = GetUnigramSentenceProbability(sentence)
             biProb = GetBigramSentenceProbability(sentence)
             biSmoothProb = GetSmoothedSentenceProbability(sentence)
 
-            print("S = ", sentence)
-            print("Unigrams: logprob(S) = ", uniProb)
-            print("Bigrams: logprob(S) = ", biProb)
-            print("Bigrams Smoothing: logprob(S) = ", biSmoothProb)
+            print("S = ", line.strip())
+            print("Unigrams: logprob(S) = ", "{:.4f}".format(uniProb))
+            print("Bigrams: logprob(S) = ", "undefined" if biProb==0 else "{:.4f}".format(biProb))
+            # print("Bigrams Smoothing: logprob(S) = ", "{:.4f}".format(biSmoothProb))
             print()
 
 if __name__ == '__main__':
