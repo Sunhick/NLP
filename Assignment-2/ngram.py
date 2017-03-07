@@ -71,7 +71,7 @@ def GetSmoothedProbabilities(bigram):
     # print("bigram word: ", bigram)
     # print("bigram count: ", GetBigramCounts(bigram))
     # print("unigram count: ", GetUnigramCounts((first,)))
-    prob = float(GetBigramCounts(bigram)+K)/(GetUnigramCounts((first,))+V)
+    prob = float(GetBigramCounts(bigram)+K)/(GetUnigramCounts((first,))+(K*V))
     # print("p=", prob)
     return prob
 
@@ -80,7 +80,7 @@ def GetUnigramSentenceProbability(sentence):
     prob = 0.0
     for word in GetNgrams(sentence.split(), 1):
         # Ignore sentence begin/end markers
-        if word[0] == "<s>" or word[0] == "</s>":
+        if word[0] == SENTENCE_BEGIN or word[0] == SENTENCE_END:
             continue
         prob += math.log10(GetUnigramProbabilities(word))
 
@@ -126,12 +126,14 @@ def main(cmdline):
             # strip the new lines either at begin or at the end of sentence.
             # extract words by splitting them on space delimiter.
             tokens = sentence.lower().strip().split()
+            
             # create unigrams and bigrams
             unitokens = GetNgrams(deepcopy(tokens), 1)
             bitokens = GetNgrams(deepcopy(tokens), 2)
+            
             # update the counters
-            unigramsCounter = UpdateCounter(unitokens, unigramsCounter)
-            bigramsCounter = UpdateCounter(bitokens, bigramsCounter)
+            UpdateCounter(unitokens, unigramsCounter)
+            UpdateCounter(bitokens, bigramsCounter)
 
     # print(len(unigramsCounter))
     # print(len(bigramsCounter))
@@ -153,7 +155,6 @@ def main(cmdline):
             print("Unigrams: logprob(S) =", "{:.4f}".format(uniProb))
             print("Bigrams: logprob(S) =", "undefined" if biProb==0 else "{:.4f}".format(biProb))
             print("Smoothed Bigrams: logprob(S) =", "{:.4f}".format(biSmoothProb))
-            print()
 
 if __name__ == '__main__':
     main(sys.argv[1:])

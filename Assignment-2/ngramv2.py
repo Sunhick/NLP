@@ -88,7 +88,7 @@ class Ngram(object):
     def GetSmoothedProbabilities(self, bigram, K):
         V = len(self.unigramsCounter)
         first, _ = bigram
-        prob = float(self.GetBigramCounts(bigram)+K)/(self.GetUnigramCounts((first,))+V)
+        prob = float(self.GetBigramCounts(bigram)+K)/(self.GetUnigramCounts((first,))+(K*V))
         return prob
 
     def GetUnigramSentenceProbability(self, sentence):
