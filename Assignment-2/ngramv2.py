@@ -16,6 +16,13 @@ import math
 from copy import deepcopy
 from collections import defaultdict
 
+class IncorrectFile(Exception):
+    def __init__(self, message):
+        self.message = message
+
+    def __str__(self):
+        return self.message
+
 class Ngram(object):
     # Makers the begining / end of sentence.
     SENTENCE_BEGIN = "<s>"
@@ -143,4 +150,5 @@ def main(cmdline):
             print()
 
 if __name__ == '__main__':
-    main(sys.argv[1:])
+    raise IncorrectFile("Don't use this file! use the latest file ngram.py")
+    # main(sys.argv[1:])
