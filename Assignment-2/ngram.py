@@ -129,12 +129,9 @@ def main(cmdline):
             UpdateCounter(unitokens, unigramsCounter)
             UpdateCounter(bitokens, bigramsCounter)
 
-    # print(len(unigramsCounter))
-    # print(len(bigramsCounter))
-
     # Now use the test file to calculate probabilities
-    # What should i do now. read the test file and calculate 
-    # unigram and bigram model probabilities for each sentence?
+    # Read the test file and calculate unigram and 
+    # bigram model probabilities for each sentence.
 
     # Test the Ngram model on test file and calculate the 
     # sentence prediction probability
