@@ -46,16 +46,8 @@ def GetBigramCounts(word):
 
 # Or GetUnigramAndBigramCounts()
 def GetUnigramProbabilities(word):
-    # eliminate the sentence markers(-2)
-    # L = len(unigramsCounter)-2
+    # compute the total word frequency except sentence begin / end markers
     L = sum(unigramsCounter.values()) - unigramsCounter[(SENTENCE_BEGIN,)] - unigramsCounter[(SENTENCE_END,)]
-    # print("length=", L)
-    # print("begin=",unigramsCounter[(SENTENCE_BEGIN,)])
-    # print("end=",unigramsCounter[(SENTENCE_END,)])
-    # print("total=",sum(unigramsCounter.values()))
-    # print("count=",GetUnigramCounts(word))
-    # print("word=", word)
-    # print("-----------------")
     prob = float(GetUnigramCounts(word)) / L
     return prob
 
@@ -68,11 +60,7 @@ def GetBigramProbabilities(bigram):
 def GetSmoothedProbabilities(bigram):
     V = len(unigramsCounter)
     first, _ = bigram
-    # print("bigram word: ", bigram)
-    # print("bigram count: ", GetBigramCounts(bigram))
-    # print("unigram count: ", GetUnigramCounts((first,)))
     prob = float(GetBigramCounts(bigram)+K)/(GetUnigramCounts((first,))+(K*V))
-    # print("p=", prob)
     return prob
 
 # Or GetBigramAndSmoothedProb()
@@ -91,7 +79,7 @@ def GetBigramSentenceProbability(sentence):
     for bigram in GetNgrams(sentence.split(), 2):
         try:
             prob += math.log10(GetBigramProbabilities(bigram))
-        except ValueError:
+        except Exception:
             # If p=0, log10(p) will throw exception. Log10(0) is undefined
             return 0
     return prob
@@ -114,6 +102,12 @@ def main(cmdline):
     # use the global variables 
     global unigramsCounter
     global bigramsCounter
+
+    if len(cmdline) < 2:
+        print("Missing training and test file.")
+        print("$ python3 ngram.py trainingFile testFile")
+        return
+
     trainingFile = cmdline[0]
     testFile = cmdline[1]
 
