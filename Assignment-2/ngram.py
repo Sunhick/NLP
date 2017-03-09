@@ -142,6 +142,7 @@ def main(cmdline):
             print("Unigrams: logprob(S) =", "{:.4f}".format(uniProb))
             print("Bigrams: logprob(S) =", "undefined" if biProb==0 else "{:.4f}".format(biProb))
             print("Smoothed Bigrams: logprob(S) =", "{:.4f}".format(biSmoothProb))
+            print()
 
 if __name__ == '__main__':
     main(sys.argv[1:])
