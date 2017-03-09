@@ -48,20 +48,16 @@ def GetBigramCounts(word):
 def GetUnigramProbabilities(word):
     # compute the total word frequency except sentence begin / end markers
     L = sum(unigramsCounter.values()) - unigramsCounter[(SENTENCE_BEGIN,)] - unigramsCounter[(SENTENCE_END,)]
-    prob = float(GetUnigramCounts(word)) / L
-    return prob
+    return float(GetUnigramCounts(word)) / L
 
 def GetBigramProbabilities(bigram):
-    prob = 0.0
     first,_ = bigram
-    prob = float(GetBigramCounts(bigram))/GetUnigramCounts((first,))
-    return prob
+    return float(GetBigramCounts(bigram))/GetUnigramCounts((first,))
 
 def GetSmoothedProbabilities(bigram):
     V = len(unigramsCounter)
     first, _ = bigram
-    prob = float(GetBigramCounts(bigram)+K)/(GetUnigramCounts((first,))+(K*V))
-    return prob
+    return float(GetBigramCounts(bigram)+K)/(GetUnigramCounts((first,))+(K*V))
 
 # Or GetBigramAndSmoothedProb()
 def GetUnigramSentenceProbability(sentence):

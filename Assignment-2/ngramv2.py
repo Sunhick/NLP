@@ -16,7 +16,7 @@ import math
 from copy import deepcopy
 from collections import defaultdict
 
-class IncorrectFile(Exception):
+class IncorrectFileError(Exception):
     def __init__(self, message):
         self.message = message
 
@@ -150,5 +150,5 @@ def main(cmdline):
             print()
 
 if __name__ == '__main__':
-    raise IncorrectFile("Don't use this file! use the latest file ngram.py")
+    raise IncorrectFileError("Don't use this file! use the latest file ngram.py")
     # main(sys.argv[1:])
