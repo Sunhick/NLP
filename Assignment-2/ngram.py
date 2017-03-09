@@ -66,7 +66,10 @@ def GetUnigramSentenceProbability(sentence):
         # Ignore sentence begin/end markers
         if word[0] == SENTENCE_BEGIN or word[0] == SENTENCE_END:
             continue
-        prob += math.log10(GetUnigramProbabilities(word))
+        try:
+            prob += math.log10(GetUnigramProbabilities(word))
+        except Exception:
+            return 0
 
     return prob
 
@@ -78,13 +81,17 @@ def GetBigramSentenceProbability(sentence):
         except Exception:
             # If p=0, log10(p) will throw exception. Log10(0) is undefined
             return 0
+
     return prob
 
 def GetSmoothedSentenceProbability(sentence):
     prob = 0.0
     for bigram in GetNgrams(sentence.split(), 2):
-        # Probability of unseen word is not zero, but negligible
-        prob += math.log10(GetSmoothedProbabilities(bigram))
+        try:
+            # Probability of unseen word is not zero, but negligible
+            prob += math.log10(GetSmoothedProbabilities(bigram))
+        except Exception as e:
+            return 0
 
     return prob
 
@@ -128,6 +135,7 @@ def main(cmdline):
     # Now use the test file to calculate probabilities
     # Read the test file and calculate unigram and 
     # bigram model probabilities for each sentence.
+    __format = lambda p: "undefined" if p == 0 else "{:.4f}".format(p)
 
     # Test the Ngram model on test file and calculate the 
     # sentence prediction probability
@@ -139,9 +147,9 @@ def main(cmdline):
             biSmoothProb = GetSmoothedSentenceProbability(sentence)
 
             print("S =", line.strip())
-            print("Unigrams: logprob(S) =", "{:.4f}".format(uniProb))
-            print("Bigrams: logprob(S) =", "undefined" if biProb==0 else "{:.4f}".format(biProb))
-            print("Smoothed Bigrams: logprob(S) =", "{:.4f}".format(biSmoothProb))
+            print("Unigrams: logprob(S) =", __format(uniProb))
+            print("Bigrams: logprob(S) =", __format(biProb))
+            print("Smoothed Bigrams: logprob(S) =", __format(biSmoothProb))
             print()
 
 if __name__ == '__main__':
