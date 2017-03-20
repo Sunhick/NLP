@@ -34,6 +34,12 @@ from collections import namedtuple
 # progress bar
 from status import printProgressBar
 
+class POSError(Exception):
+    """
+    Defines the POS tagger application error
+    """
+    pass
+
 class Constants(object):
     kSENTENCE_BEGIN = "<s>"
     kSENTENCE_END = "</s>"
@@ -96,6 +102,12 @@ class POSFile(object):
     lines = []
 
     def __init__(self, filename):
+        # os.path.exists is a false positive if we are looking for file.
+        # os.path.exists only checks if there's an inode entry in dir and doesn't
+        # check the type of file in that directory.
+        if not os.path.isfile(filename):
+            raise POSError("{0} is invalid file".format(filename))
+
         self.__read(filename)
 
     def __read(self, filename):
@@ -301,7 +313,7 @@ class HMMTagger(object):
     k = 0.0  # maybe i have to fine tune this to get better accuracy.
     __decoder = None
 
-    def __init__(self, k = 0.0001, decoder = Viterbi()):
+    def __init__(self, k = 0.01, decoder = Viterbi()):
         """
         Initialize the varibles. decoder is paramterized and default decoder is viterbi.
         Default viterbi uses bigram model sequence. If you want use your own decoder, then 
@@ -310,6 +322,8 @@ class HMMTagger(object):
         Defining a decoder: It should be callable on object instance i.e impement 
         __call__() method. Signature : def __call__(self, hmm_instance, sentence)
         """
+        if not issubclass(type(decoder), Decoder):
+            raise POSError("{0} doesn't implement {1}".format(decoder, Decoder))
         self.tagTransitions = defaultdict(lambda: defaultdict(float))
         self.likelihood = defaultdict(lambda: defaultdict(float))
         self.k = k
