@@ -29,8 +29,9 @@ from operator import attrgetter
 from collections import defaultdict
 from collections import namedtuple
 
-kSENTENCE_BEGIN = "<s>"
-kSENTENCE_END = "</s>"
+class Constants(object):
+    kSENTENCE_BEGIN = "<s>"
+    kSENTENCE_END = "</s>"
 
 class WordTag(namedtuple('WordTag', ['word', 'tag'], verbose=False)):
     """
@@ -45,10 +46,10 @@ class WordTag(namedtuple('WordTag', ['word', 'tag'], verbose=False)):
         self.tag = tag
 
     def IsLastWord(self):
-        return self.word == kSENTENCE_END
+        return self.word == Constants.kSENTENCE_END
 
     def IsFirstWord(self):
-        return self.word == kSENTENCE_BEGIN
+        return self.word == Constants.kSENTENCE_BEGIN
 
 class Line(object):
     """
@@ -94,7 +95,7 @@ class POSFile(object):
 
     def __read(self, filename):
         sentence = Line()
-        sentence.AddWordTag(kSENTENCE_BEGIN, kSENTENCE_BEGIN)
+        sentence.AddWordTag(Constants.kSENTENCE_BEGIN, Constants.kSENTENCE_BEGIN)
         with open(filename, 'r') as file:
             for line in file:
                 if not line.strip():
@@ -104,7 +105,7 @@ class POSFile(object):
                     # create a new line holder
                     sentence = Line()
                     # add the word begin marker
-                    sentence.AddWordTag(kSENTENCE_BEGIN, kSENTENCE_BEGIN)
+                    sentence.AddWordTag(ConstantskSENTENCE_BEGIN, Constants.kSENTENCE_BEGIN)
                     continue
 
                 word, tag = line.split()
@@ -113,7 +114,7 @@ class POSFile(object):
                 # Marks the last word in the sentence
                 if word == "." and tag == ".":
                     # add the word end marker
-                    sentence.AddWordTag(kSENTENCE_END, kSENTENCE_END)
+                    sentence.AddWordTag(Constants.kSENTENCE_END, Constants.kSENTENCE_END)
                 else:
                     sentence.AddWordTag(word, tag)
 
@@ -220,7 +221,7 @@ class Viterbi(object):
         # initialization step
         for state in tagger.tagset:
             viterbi[state][tokens[0]].probability = log10(1)                    \
-                + tagger.GetTagTransitionProbability(kSENTENCE_BEGIN, state)    \
+                + tagger.GetTagTransitionProbability(Constants.kSENTENCE_BEGIN, state)    \
                 + tagger.GetLikelihoodProbability(state, tokens[0])
             viterbi[state][tokens[0]].tag = state
             viterbi[state][tokens[0]].backpointer = viterbi[self.start][self.start]
@@ -304,7 +305,7 @@ class HMMTagger(object):
         # return log10(self.tagTransitions[fromTag][toTag]+.0000001)
         prob = 0.0
         cxy = self.tagTransitions[fromTag][toTag]
-        cx = sum(self.tagTransitions[fromTag].values)
+        cx = sum(self.tagTransitions[fromTag].values())
         prob = (cxy + self.k) / (cx + (self.k * self.V))
         return float(prob)
 
@@ -323,6 +324,19 @@ class HMMTagger(object):
         prob = (ctagword + self.k) / (ctag + (self.k * self.V))
         return float(prob)
 
+    def Log10TransProbability(self, fromTag, toTag):
+        try:
+            return log10(self.GetTagTransitionProbability(fromTag, toTag))
+        except ValueError:
+            # If there's any math domain error. Just return probability as 0.
+            return float(0)
+
+    def Log10LikelihoodProbability(self, tag, word):
+        try:
+            return log10(self.GetLikelihoodProbability(tag,word))
+        except ValueError:
+            # If there's any math domain error. Just return probability as 0.
+            return float(0)
 
     def Decode(self, sentence):
         return self.__decoder(self, sentence)

@@ -84,5 +84,5 @@ hmm.tagTransitions = tt
 hmm.likelihood = li
 sentence = "I want to race"
 
-k = hmm.Decode(sentence)
-print(k)
+tags = hmm.Decode(sentence)
+print(tags)
