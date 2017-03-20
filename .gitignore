@@ -90,3 +90,7 @@ ENV/
 
 # Mac temp files
 .DS_Store
+
+# temporary files for assignment 3
+berp-key.txt
+berp-out.txt
