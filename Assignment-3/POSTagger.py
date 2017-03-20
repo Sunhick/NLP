@@ -31,6 +31,9 @@ from operator import attrgetter
 from collections import defaultdict
 from collections import namedtuple
 
+# progress bar
+from status import printProgressBar
+
 class Constants(object):
     kSENTENCE_BEGIN = "<s>"
     kSENTENCE_END = "</s>"
@@ -107,7 +110,7 @@ class POSFile(object):
                     # create a new line holder
                     sentence = Line()
                     # add the word begin marker
-                    sentence.AddWordTag(ConstantskSENTENCE_BEGIN, Constants.kSENTENCE_BEGIN)
+                    sentence.AddWordTag(Constants.kSENTENCE_BEGIN, Constants.kSENTENCE_BEGIN)
                     continue
 
                 word, tag = line.split()
@@ -177,6 +180,7 @@ class ProbEntry(object):
     probability = float(0)
     backpointer = None
     tag = None
+    word = None
 
     def __init__(self, probability=0.0, tag=None, backpointer=None):
         self.probability = probability
@@ -185,8 +189,8 @@ class ProbEntry(object):
 
     def __str__(self):
         backptr = id(self.backpointer) if self.backpointer else None
-        return "Prob={0} id={2} tag={3} BackPtr={1}".     \
-            format(self.probability, backptr, id(self), self.tag)
+        return "Prob={0} id={2} tag={3} word={4} BackPtr={1}".     \
+            format(self.probability, backptr, id(self), self.tag, self.word)
 
 class Decoder(object):
     """
@@ -208,16 +212,17 @@ class Viterbi(Decoder):
         self.start = "start"
         self.end = "end"
 
-    def __backTrack(self, viterbi):
+    def __backTrack(self, viterbi, T):
         """
         Return the tag sequence by following back pointers to states
         back in time from viterbi.backpointers
         """
         tagSequence = []
-        pointer = viterbi[self.end][self.end].backpointer
+        pointer = viterbi[T][self.end][self.end].backpointer
         
         # traverse the back pointers
         while (pointer):
+            # print("TAG=%s WORD=%s" % (pointer.tag, pointer.word))
             tagSequence.append(pointer.tag)
             pointer = pointer.backpointer
 
@@ -239,42 +244,51 @@ class Viterbi(Decoder):
         T = len(tokens)
         # viterbi = [[ProbEntry() for j in range(T)] for i in range(N+2)]
 
-        viterbi = defaultdict(lambda: defaultdict(ProbEntry))
+        viterbi = [defaultdict(lambda: defaultdict(ProbEntry)) for i in range(T+2)]
 
-        viterbi[self.start][self.start] = None
+        viterbi[0][self.start][self.start] = None
 
         # initialization step
         for state in tagger.tagset:
-            viterbi[state][tokens[0]].probability = log10(1)                    \
+            viterbi[1][state][tokens[0]].probability = log10(1)                    \
                 + tagger.GetTagTransitionProbability(Constants.kSENTENCE_BEGIN, state)    \
                 + tagger.GetLikelihoodProbability(state, tokens[0])
-            viterbi[state][tokens[0]].tag = state
-            viterbi[state][tokens[0]].backpointer = viterbi[self.start][self.start]
+            viterbi[1][state][tokens[0]].tag = state
+            viterbi[1][state][tokens[0]].word = tokens[0]
+            viterbi[1][state][tokens[0]].backpointer = viterbi[0][self.start][self.start]
 
         # recursion step
         for time in range(1, T):
+            # print("w =", tokens[time])
             for state in tagger.tagset:
                 # tuple of (prob. entry and prob. value)
                 prbs = [
-                    (viterbi[sp][tokens[time-1]], 
-                        viterbi[sp][tokens[time-1]].probability                 \
+                    (viterbi[time][sp][tokens[time-1]], 
+                        viterbi[time][sp][tokens[time-1]].probability                 \
                         + tagger.GetTagTransitionProbability(sp, state)         \
                         + tagger.GetLikelihoodProbability(state, tokens[time]))
                     for sp in tagger.tagset 
                     ]
+
                 backptr, prob = max(prbs, key=itemgetter(1))
-                viterbi[state][tokens[time]].probability = prob
-                viterbi[state][tokens[time]].tag = state
-                viterbi[state][tokens[time]].backpointer = backptr
+                viterbi[time+1][state][tokens[time]].probability = prob
+                viterbi[time+1][state][tokens[time]].tag = state
+                viterbi[time+1][state][tokens[time]].word = tokens[time]
+                viterbi[time+1][state][tokens[time]].backpointer = backptr
+
+            # maxd = max([viterbi[time+1][state][tokens[time]] for state in tagger.tagset],
+            #             key = attrgetter("probability"))
+            # print(maxd)
 
         # termination step
-        final = max([viterbi[s][tokens[time]] for s in tagger.tagset],      \
+        final = max([viterbi[T][s][tokens[T-1]] for s in tagger.tagset],      \
                         key=attrgetter("probability"))
-        viterbi[self.end][self.end].backpointer = final
+        viterbi[T][self.end][self.end].backpointer = final
+        # print("final=", final)
 
         # return the backtrace path by following back pointers to states
         # back in time from viterbi.backpointers
-        tagSequence = self.__backTrack(viterbi)
+        tagSequence = self.__backTrack(viterbi, T)
         return tagSequence
 
 class HMMTagger(object):
@@ -311,6 +325,7 @@ class HMMTagger(object):
             for word, tag in line:
                 # unpack word and tag. I can do this becusae of namedtuple
                 self.likelihood[tag][word] += 1
+                self.tagset.add(tag)
 
             words = line.words
             # update the tag transition probabilties
@@ -328,7 +343,7 @@ class HMMTagger(object):
         For easier and faster look up.
         """
         # -1 because of <s>
-        self.tagset = set(self.tagTransitions)
+        # self.tagset = set(self.tagTransitions).remove(Constants.kSENTENCE_BEGIN)
         self.V = len(self.tagset) - 1
 
         # If i normalize the tag transition table, 
@@ -407,8 +422,36 @@ def main(args):
 
     # split data as 80:20 for train and test 
     train, test = data.Split(80)
-    tagger = HMMTagger(Viterbi())
+    tagger = HMMTagger(k = 0.0001, decoder = Viterbi())
     tagger.Train(train)
+
+    formatter = lambda word, tag: "{0}\t{1}\n".format(word, tag)
+    endOfSentence = ".\t.\n"
+
+    current = 0
+    total = len(test)
+    with open("berp-key.txt", "w") as goldFile:
+        with open("berp-out.txt", "w") as outFile:
+            for line in test:
+                sentence = line.Sentence
+                # print("S =", sentence)
+                tagSequence = tagger.Decode(sentence)
+
+                for wt in line:
+                    if not wt.IsFirstWord() and not wt.IsLastWord():
+                        w, t = wt
+                        goldFile.write(formatter(w, t))
+
+                goldFile.write(endOfSentence)
+                goldFile.write("\n")
+
+                for w, t in zip(sentence.split(), tagSequence):
+                    outFile.write(formatter(w, t))
+                outFile.write(endOfSentence)
+                outFile.write("\n")
+
+                current += 1
+                printProgressBar(current, total, prefix="Progress:", suffix="Complete", length=50)
 
 if __name__ == "__main__":
     main(sys.argv[1:])

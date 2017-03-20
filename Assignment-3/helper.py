@@ -91,7 +91,7 @@ hmm.tagset = set(tagset)
 hmm.V = len(tagset)
 hmm.tagTransitions = tt
 hmm.likelihood = li
-sentence = "I want to race"
+sentence = "race race"
 
 tags = hmm.Decode(sentence)
 print(tags)
