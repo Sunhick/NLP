@@ -9,7 +9,6 @@ __email__ = "suba5417@colorado.edu"
 
 import os
 import sys
-import math
 import random
 
 # not required for now. as we are not splitting contractions ourself.
@@ -20,9 +19,13 @@ import random
 # from functools import partial
 # Bigrams = partial(Ngrams, n = 2)
 
+# for calculating log probabilities
+from math import log10
 from copy import deepcopy
 # for getting the max in tuple based on key
 from operator import itemgetter
+# for getting the max of ProbEntry 
+from operator import attrgetter
 from collections import defaultdict
 from collections import namedtuple
 
@@ -161,27 +164,46 @@ class ProbEntry(object):
     """
     Represents path probability entry in viterbi matrix 
     """
-    probability = 0.0
-    backpointer = None
 
-    def __init__(self, probability=0.0, backpointer=None):
+    # store log probability for easier calculations, and also
+    # we don't lose the floating point precision.
+    probability = float(0)
+    backpointer = None
+    tag = None
+
+    def __init__(self, probability=0.0, tag=None, backpointer=None):
         self.probability = probability
         self.backpointer = backpointer
+        self.tag = tag
 
     def __str__(self):
         backptr = id(self.backpointer) if self.backpointer else None
-        return "Prob={0} id={2} BackPtr={1}".format(self.probability, backptr, id(self))
+        return "Prob={0} id={2} tag={3} BackPtr={1}".     \
+            format(self.probability, backptr, id(self), self.tag)
 
 class Viterbi(object):
     """
-    Stateless viterbi algorithm to decode the sequence.
+    Stateless viterbi algorithm to decode the sequence using bigram model.
     """
+    end = start = None
 
     def __init__(self):
-        pass
+        self.start = "start"
+        self.end = "end"
 
     def __backTrack(self, viterbi):
-        pass
+        tagSequence = []
+        pointer = viterbi[self.end][self.end].backpointer
+        
+        # traverse the back pointers
+        while (pointer):
+            tagSequence.append(pointer.tag)
+            pointer = pointer.backpointer
+
+        # reverse the tag sequence as they are 
+        # traced from back to front
+        tagSequence.reverse()
+        return tagSequence
 
     def __call__(self, tagger, sentence):
         tagSequence = []
@@ -193,26 +215,36 @@ class Viterbi(object):
 
         viterbi = defaultdict(lambda: defaultdict(ProbEntry))
 
+        viterbi[self.start][self.start] = None
+
         # initialization step
         for state in tagger.tagset:
-            viterbi[state][tokens[0]].probability =
-                1 * tagger.GetTagTransitionProbability(state, kSENTENCE_BEGIN)
+            viterbi[state][tokens[0]].probability = log10(1)                    \
+                + tagger.GetTagTransitionProbability(kSENTENCE_BEGIN, state)    \
+                + tagger.GetLikelihoodProbability(state, tokens[0])
+            viterbi[state][tokens[0]].tag = state
+            viterbi[state][tokens[0]].backpointer = viterbi[self.start][self.start]
 
         # recursion step
         for time in range(1, T):
             for state in tagger.tagset:
                 # tuple of (prob. entry and prob. value)
                 prbs = [
-                    (viterbi[sp][tokens[time-1]], viterbi[sp][tokens[time-1]] * 
-                    tagger.GetTagTransitionProbability(sp, state) * 
-                    tagger.GetLikelihoodProbability(sp, tokens[time]))
-                    for sp in tagger.tagset
+                    (viterbi[sp][tokens[time-1]], 
+                        viterbi[sp][tokens[time-1]].probability                 \
+                        + tagger.GetTagTransitionProbability(sp, state)         \
+                        + tagger.GetLikelihoodProbability(state, tokens[time]))
+                    for sp in tagger.tagset 
                     ]
                 backptr, prob = max(prbs, key=itemgetter(1))
                 viterbi[state][tokens[time]].probability = prob
+                viterbi[state][tokens[time]].tag = state
                 viterbi[state][tokens[time]].backpointer = backptr
 
         # termination step
+        final = max([viterbi[s][tokens[time]] for s in tagger.tagset],      \
+                        key=attrgetter("probability"))
+        viterbi[self.end][self.end].backpointer = final
 
         # return the backtrace path by following back pointers to states
         # back in time from viterbi.backpointers
@@ -269,11 +301,12 @@ class HMMTagger(object):
 
         Use add-k with k = 0.0001 ? (assignment-2 value)
         """
+        # return log10(self.tagTransitions[fromTag][toTag]+.0000001)
         prob = 0.0
         cxy = self.tagTransitions[fromTag][toTag]
         cx = sum(self.tagTransitions[fromTag].values)
         prob = (cxy + self.k) / (cx + (self.k * self.V))
-        return prob
+        return float(prob)
 
     def GetLikelihoodProbability(self, tag, word):
         """
@@ -283,10 +316,12 @@ class HMMTagger(object):
 
         Use add-k with k = 0.0001 ? (assignment-2 value)
         """
+        # return log10(self.likelihood[tag][word]+.00000001)
         prob = 0.0
         ctagword = self.likelihood[tag][word]
         ctag = sum(self.likelihood[tag].values())
         prob = (ctagword + self.k) / (ctag + (self.k * self.V))
+        return float(prob)
 
 
     def Decode(self, sentence):
