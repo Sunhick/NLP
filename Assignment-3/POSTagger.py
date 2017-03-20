@@ -440,7 +440,7 @@ def main(args):
     tagger.Train(train)
 
     formatter = lambda word, tag: "{0}\t{1}\n".format(word, tag)
-    endOfSentence = ".\t.\n"
+    endOfSentence = ".\t.{newline}{newline}".format(newline=os.linesep)
 
     current = 0
     total = len(test)
@@ -457,12 +457,10 @@ def main(args):
                         goldFile.write(formatter(w, t))
 
                 goldFile.write(endOfSentence)
-                goldFile.write("\n")
 
                 for w, t in zip(sentence.split(), tagSequence):
                     outFile.write(formatter(w, t))
                 outFile.write(endOfSentence)
-                outFile.write("\n")
 
                 current += 1
                 printProgressBar(current, total, prefix="Progress:", suffix="Complete", length=50)
