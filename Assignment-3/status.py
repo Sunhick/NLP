@@ -1,25 +1,25 @@
 #!/usr/bin/python3
 
 """
-Author: Greenstick
-URL: http://stackoverflow.com/questions/3173320/text-progress-bar-in-the-console
+Show progress bar
+
+reference url: http://stackoverflow.com/questions/3173320/text-progress-bar-in-the-console
 """
+
+import os
+
 def printProgressBar (iteration, total, prefix = '', suffix = '', decimals = 1, length = 100, fill = '█'):
     """
-    Call in a loop to create terminal progress bar
-    @params:
-        iteration   - Required  : current iteration (Int)
-        total       - Required  : total iterations (Int)
-        prefix      - Optional  : prefix string (Str)
-        suffix      - Optional  : suffix string (Str)
-        decimals    - Optional  : positive number of decimals in percent complete (Int)
-        length      - Optional  : character length of bar (Int)
-        fill        - Optional  : bar fill character (Str)
+    Show progress bar
     """
     percent = ("{0:." + str(decimals) + "f}").format(100 * (iteration / float(total)))
-    filledLength = int(length * iteration // total)
-    bar = fill * filledLength + '-' * (length - filledLength)
-    print('\r%s |%s| %s%% %s' % (prefix, bar, percent, suffix), end = '\r')
-    # Print New Line on Complete
+    fLength = int(length * iteration // total)
+    bars = fill * fLength + '-' * (length - fLength)
+    
+    # progressbar = \
+    #     lambda prefix, bars, precent, suffix: "\r%s |%s| %s%% %s".format(prefix, bars, percent, suffix)
+    progressbar = ("\r%s |%s| %s%% %s").format(prefix, bars, percent, suffix)
+    print(progressbar, end = '\r')
+    
     if iteration == total: 
-        print()
+        print(os.linesep)

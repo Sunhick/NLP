@@ -95,3 +95,6 @@ sentence = "race race"
 
 tags = hmm.Decode(sentence)
 print(tags)
+
+# http://www.katrinerk.com/courses/python-worksheets/hidden-markov-models-for-pos-tagging-in-python
+# https://github.com/mkvisakan/NLP-Python/tree/master/POS_Tagging
