@@ -18,7 +18,7 @@ def printProgressBar (iteration, total, prefix = '', suffix = '', decimals = 1, 
     
     # progressbar = \
     #     lambda prefix, bars, precent, suffix: "\r%s |%s| %s%% %s".format(prefix, bars, percent, suffix)
-    progressbar = ("\r%s |%s| %s%% %s").format(prefix, bars, percent, suffix)
+    progressbar = ("\r{0} |{1}| {2}%% {3}").format(prefix, bars, percent, suffix)
     print(progressbar, end = '\r')
     
     if iteration == total: 

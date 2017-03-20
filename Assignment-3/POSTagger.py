@@ -49,12 +49,17 @@ class WordTag(namedtuple('WordTag', ['word', 'tag'], verbose=False)):
     Represents the word tag pair. Inherits from namedtuple so that i can 
     unpack the class in word, tag pair easily in the iterations.
     """
-    word = tag = None
 
-    def __init__(self, word, tag):
-        # TODO: shoud i ignore the case of word?
-        self.word = word.lower()
-        self.tag = tag
+    # can't do __init__ in case of namedtuple
+    # def __init__(self, word, tag):
+    #     # TODO: shoud i ignore the case of word?
+    #     self.word = word.lower()
+    #     self.tag = tag
+
+    def __new__(cls, word, tag):
+        word = word.lower()
+        self = super(WordTag, cls).__new__(cls, word, tag)
+        return self
 
     def IsLastWord(self):
         return self.word == Constants.kSENTENCE_END
@@ -67,11 +72,10 @@ class Line(object):
     Represents the sentence as collection of words and thier 
     corresponding tag sequences.
     """
-    words = []
-    __index = 0
 
     def __init__(self):
         self.words = []
+        self.__index = 0
 
     def AddWordTag(self, word, tag):
         wordTag = WordTag(word, tag)
@@ -95,19 +99,27 @@ class Line(object):
             self.__index += 1
             return self.words[self.__index-1]
 
+    def __eq__(self, other):
+        for wt in zip(self.words, other.words):
+            w1, t1 = wt[0]
+            w2, t2 = wt[0]
+            if (w1 != w2 and t1 != t2):
+                return False
+        return True
+
 class POSFile(object):
     """
     Abstraction over words-tags, lines as a POSfile.
     """
-    lines = []
 
     def __init__(self, filename):
         # os.path.exists is a false positive if we are looking for file.
         # os.path.exists only checks if there's an inode entry in dir and doesn't
         # check the type of file in that directory.
         if not os.path.isfile(filename):
-            raise POSError("{0} is invalid file".format(filename))
+            raise POSError("{0} is a invalid file.".format(filename))
 
+        self.lines = []
         self.__read(filename)
 
     def __read(self, filename):
@@ -146,22 +158,22 @@ class POSFile(object):
         return self.lines[:train_len], self.lines[-test_len:]
 
     def RandomSplit(self, train_percent):
-        lines = deepcopy(self.lines)
-        random.shuffle(lines)
-        size = len(lines)
+        # lines = deepcopy(self.lines)
+        random.shuffle(self.lines)
+        random.shuffle(self.lines)
+        size = len(self.lines)
         train_len = int(size*train_percent/100)
         test_len = size - train_len
-        return lines[:train_len], lines[-test_len:]
+        return self.lines[:train_len], self.lines[-test_len:]
 
 class Ngrams(object):
     """
     Generates the ngrams from the list of words.
     """
-    Ngrams = []
-    __index = 0
 
     def __init__(self, words, n):
         self.Ngrams = list(zip(*[words[i:] for i in range(n)]))
+        self.__index = 0
 
     def __iter__(self):
         self.__index = 0
@@ -189,15 +201,12 @@ class ProbEntry(object):
 
     # store log probability for easier calculations, and also
     # we don't lose the floating point precision.
-    probability = float(0)
-    backpointer = None
-    tag = None
-    word = None
 
     def __init__(self, probability=0.0, tag=None, backpointer=None):
         self.probability = probability
         self.backpointer = backpointer
         self.tag = tag
+        self.word = None
 
     def __str__(self):
         backptr = id(self.backpointer) if self.backpointer else None
@@ -212,13 +221,12 @@ class Decoder(object):
 
     @abstractmethod
     def __call__(self, tagger, sentence):
-        raise NotImplementedError("Should implement this callable method")
+        raise NotImplementedError("Should implement __call__(...) method")
 
 class Viterbi(Decoder):
     """
     Stateless viterbi algorithm to decode the sequence using bigram model.
     """
-    end = start = None
 
     def __init__(self):
         self.start = "start"
@@ -230,7 +238,7 @@ class Viterbi(Decoder):
         back in time from viterbi.backpointers
         """
         tagSequence = []
-        pointer = viterbi[T][self.end][self.end].backpointer
+        pointer = viterbi[T+1][self.end][self.end].backpointer
         
         # traverse the back pointers
         while (pointer):
@@ -264,43 +272,40 @@ class Viterbi(Decoder):
         # not leading to a infinite set of tags.
         viterbi[0][self.start][self.start] = None
 
+        word = tokens[0]
         # initialization step
         for state in tagger.tagset:
-            viterbi[1][state][tokens[0]].probability = log10(1)                             \
-                + tagger.GetTagTransitionProbability(Constants.kSENTENCE_BEGIN, state)      \
-                + tagger.GetLikelihoodProbability(state, tokens[0])
-            viterbi[1][state][tokens[0]].tag = state
-            viterbi[1][state][tokens[0]].word = tokens[0]
-            viterbi[1][state][tokens[0]].backpointer = viterbi[0][self.start][self.start]
+            viterbi[1][state][word].probability = log10(1)                                    \
+                + tagger.Log10TagTransitionProbability(Constants.kSENTENCE_BEGIN, state)      \
+                + tagger.Log10LikelihoodProbability(state, tokens[0])
+            viterbi[1][state][word].tag = state
+            viterbi[1][state][word].word = word
+            viterbi[1][state][word].backpointer = viterbi[0][self.start][self.start]
 
         # recursion step
         for time in range(1, T):
-            # print("w =", tokens[time])
+            cword = tokens[time]
+            pword = tokens[time-1]
             for state in tagger.tagset:
                 # tuple of (prob. entry and prob. value)
                 prbs = [
-                    (viterbi[time][sp][tokens[time-1]], 
-                        viterbi[time][sp][tokens[time-1]].probability                   \
-                        + tagger.GetTagTransitionProbability(sp, state)                 \
-                        + tagger.GetLikelihoodProbability(state, tokens[time]))
+                    (viterbi[time][sp][pword], 
+                        viterbi[time][sp][pword].probability                            \
+                        + tagger.Log10TagTransitionProbability(sp, state)                 \
+                        + tagger.Log10LikelihoodProbability(state, cword))
                     for sp in tagger.tagset 
                     ]
 
                 backptr, prob = max(prbs, key=itemgetter(1))
-                viterbi[time+1][state][tokens[time]].probability = prob
-                viterbi[time+1][state][tokens[time]].tag = state
-                viterbi[time+1][state][tokens[time]].word = tokens[time]
-                viterbi[time+1][state][tokens[time]].backpointer = backptr
-
-            # maxd = max([viterbi[time+1][state][tokens[time]] for state in tagger.tagset],
-            #             key = attrgetter("probability"))
-            # print(maxd)
+                viterbi[time+1][state][cword].probability = prob
+                viterbi[time+1][state][cword].tag = state
+                viterbi[time+1][state][cword].word = cword
+                viterbi[time+1][state][cword].backpointer = backptr
 
         # termination step
         final = max([viterbi[T][s][tokens[T-1]] for s in tagger.tagset],      \
                         key=attrgetter("probability"))
-        viterbi[T][self.end][self.end].backpointer = final
-        # print("final=", final)
+        viterbi[T+1][self.end][self.end].backpointer = final
 
         # return the backtrace path by following back pointers to states
         # back in time from viterbi.backpointers
@@ -398,11 +403,6 @@ class HMMTagger(object):
     """
     POS tagger using HMM. Each word may have more tags assosicated with it.
     """
-    tagTransitions = likelihood = None
-    V = 0       # vocabulary size. Total count of tags
-    tagset = set() # vocabulary set/ different POS tags
-    k = 0.0  # maybe i have to fine tune this to get better accuracy.
-    __decoder = None
 
     def __init__(self, k = 0.0001, decoder = Viterbi()):
         """
@@ -413,13 +413,17 @@ class HMMTagger(object):
         Defining a decoder: It should be callable on object instance i.e impement 
         __call__() method. Signature : def __call__(self, hmm_instance, sentence)
         """
+
+        # make sure decoder instance implements Decoder Interface
         if not issubclass(type(decoder), Decoder):
             raise POSError("{0} doesn't implement interface {1}".format(decoder, Decoder))
 
         self.tagTransitions = defaultdict(lambda: defaultdict(float))
         self.likelihood = defaultdict(lambda: defaultdict(float))
-        self.k = k
         self.__decoder = decoder
+        self.k = k # maybe i have to fine tune this to get better accuracy.
+        self.tagset = set() # vocabulary set/ different POS tags
+        self.V = 0  # vocabulary size. Total count of tags
 
     def Train(self, trainData):
         """
@@ -427,17 +431,21 @@ class HMMTagger(object):
         likelihood probabilities and tag transition probabilities.
         """
         for line in trainData:
-            # update the likelihood probabilities
+            # update the likelihood probabilities.
+            # No need to track begin/end of sentences for likelihood.
             for wordtag in line:
-                if not wordtag.IsFirstWord() and not wordtag.IsLastWord():
-                    word, tag = wordtag
-                    # unpack word and tag. I can do this becusae of namedtuple
-                    self.likelihood[tag][word] += 1
-                    self.tagset.add(tag)
+                if wordtag.IsFirstWord() or wordtag.IsLastWord(): 
+                    continue
+                word, tag = wordtag
+                # unpack word and tag. I can do this becusae of namedtuple
+                self.likelihood[tag][word] += 1
+                self.tagset.add(tag)
 
             words = line.words
             # update the tag transition probabilties
             for first, second in Bigrams(words).Ngrams:
+                if second.IsLastWord():
+                    continue
                 _, fromTag = first
                 _, toTag = second
                 self.tagTransitions[fromTag][toTag] += 1
@@ -489,7 +497,7 @@ class HMMTagger(object):
         prob = (ctagword + self.k) / (ctag + (self.k * self.V))
         return float(prob)
 
-    def Log10TransProbability(self, fromTag, toTag):
+    def Log10TagTransitionProbability(self, fromTag, toTag):
         try:
             return log10(self.GetTagTransitionProbability(fromTag, toTag))
         except ValueError:
@@ -512,8 +520,8 @@ def main(args):
     data = POSFile(filename)
 
     # split data as 80:20 for train and test 
-    train, test = data.RandomSplit(80)
-    tagger = HMMTagger(k = 0.00001, decoder = Viterbi())
+    train, test = data.Split(80)
+    tagger = HMMTagger(k = 0.0001, decoder = Viterbi())
     tagger.Train(train)
 
     formatter = lambda word, tag: "{0}\t{1}\n".format(word, tag)
@@ -526,14 +534,17 @@ def main(args):
          open("berp-out.txt", "w") as outFile:
         for line in test:
             sentence = line.Sentence
+            if not sentence.split():
+                continue
             # print("S =", sentence)
             tagSequence = tagger.Decode(sentence)
+
+            assert(len(tagSequence) == len(sentence.split()))
 
             for wt in line:
                 if not wt.IsFirstWord() and not wt.IsLastWord():
                     w, t = wt
                     goldFile.write(formatter(w, t))
-
             goldFile.write(endOfSentence)
 
             for w, t in zip(sentence.split(), tagSequence):
