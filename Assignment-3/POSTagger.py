@@ -10,6 +10,7 @@ __email__ = "suba5417@colorado.edu"
 import os
 import sys
 import math
+import random
 
 # not required for now. as we are not splitting contractions ourself.
 # but requried when testing with sentences.
@@ -19,6 +20,9 @@ import math
 # from functools import partial
 # Bigrams = partial(Ngrams, n = 2)
 
+from copy import deepcopy
+# for getting the max in tuple based on key
+from operator import itemgetter
 from collections import defaultdict
 from collections import namedtuple
 
@@ -33,7 +37,7 @@ class WordTag(namedtuple('WordTag', ['word', 'tag'], verbose=False)):
     word = tag = None
 
     def __init__(self, word, tag):
-        # ignore the case of word
+        # TODO: shoud i ignore the case of word?
         self.word = word.lower()
         self.tag = tag
 
@@ -58,6 +62,12 @@ class Line(object):
         wordTag = WordTag(word, tag)
         self.words.append(wordTag)
 
+    @property
+    def Sentence(self):
+        words = [wt.word if (not wt.IsFirstWord() and not wt.IsLastWord()) else ""
+                     for wt in self.words]
+        return " ".join(words).strip()
+
     def __iter__(self):
         # called once before iteration. reset index pointer
         self.__index = 0
@@ -70,7 +80,7 @@ class Line(object):
             self.__index += 1
             return self.words[self.__index-1]
 
-class File(object):
+class POSFile(object):
     """
     Abstraction over words-tags, lines as a file
     """
@@ -96,6 +106,7 @@ class File(object):
 
                 word, tag = line.split()
 
+                # TODO: Should i ignore the periods?
                 # Marks the last word in the sentence
                 if word == "." and tag == ".":
                     # add the word end marker
@@ -146,12 +157,66 @@ class Bigrams(Ngrams):
     def __init__(self, words):
         super(Bigrams, self).__init__(words, n = 2)
 
+class ProbEntry(object):
+    """
+    Represents path probability entry in viterbi matrix 
+    """
+    probability = 0.0
+    backpointer = None
+
+    def __init__(self, probability=0.0, backpointer=None):
+        self.probability = probability
+        self.backpointer = backpointer
+
+    def __str__(self):
+        backptr = id(self.backpointer) if self.backpointer else None
+        return "Prob={0} id={2} BackPtr={1}".format(self.probability, backptr, id(self))
+
 class Viterbi(object):
+    """
+    Stateless viterbi algorithm to decode the sequence.
+    """
+
+    def __init__(self):
+        pass
+
+    def __backTrack(self, viterbi):
+        pass
+
     def __call__(self, tagger, sentence):
         tagSequence = []
         # implement viterbi algorithm here
+        N = tagger.V
+        tokens = sentence.split()
+        T = len(tokens)
+        # viterbi = [[ProbEntry() for j in range(T)] for i in range(N+2)]
 
-        # follow the back pointers to get a tag sequence.
+        viterbi = defaultdict(lambda: defaultdict(ProbEntry))
+
+        # initialization step
+        for state in tagger.tagset:
+            viterbi[state][tokens[0]].probability =
+                1 * tagger.GetTagTransitionProbability(state, kSENTENCE_BEGIN)
+
+        # recursion step
+        for time in range(1, T):
+            for state in tagger.tagset:
+                # tuple of (prob. entry and prob. value)
+                prbs = [
+                    (viterbi[sp][tokens[time-1]], viterbi[sp][tokens[time-1]] * 
+                    tagger.GetTagTransitionProbability(sp, state) * 
+                    tagger.GetLikelihoodProbability(sp, tokens[time]))
+                    for sp in tagger.tagset
+                    ]
+                backptr, prob = max(prbs, key=itemgetter(1))
+                viterbi[state][tokens[time]].probability = prob
+                viterbi[state][tokens[time]].backpointer = backptr
+
+        # termination step
+
+        # return the backtrace path by following back pointers to states
+        # back in time from viterbi.backpointers
+        tagSequence = self.__backTrack(viterbi)
         return tagSequence
 
 class HMMTagger(object):
@@ -159,7 +224,8 @@ class HMMTagger(object):
     POS tagger using HMM. Each word may have more tags assosicated with it.
     """
     tagTransitions = likelihood = None
-    V = 0       # vocabulary size. Total count of tags 
+    V = 0       # vocabulary size. Total count of tags
+    tagset = set() 
     k = 0.0001  # maybe i have to fine tune this to get better accuracy.
     __decoder = None
 
@@ -186,9 +252,9 @@ class HMMTagger(object):
         self.__normalize()
 
     def __normalize(self):
-        # -2 because of start and end sentence markers
-        # -1 because of defaultdict's default value when called with no parameters
-        self.V = len(set(self.tagTransitions)) - 2 - 1
+        # -1 because of <s>
+        self.tagset = set(self.tagTransitions)
+        self.V = len(self.tagset) - 1
 
         # If i normalize the tag transition table, 
         # I can directly use it and no need for 
@@ -246,7 +312,7 @@ def train(filename):
 def main(args):
     filename = args[0]
     # train(filename)
-    data = File(filename)
+    data = POSFile(filename)
 
     # split data as 80:20 for train and test 
     train, test = data.Split(80)
