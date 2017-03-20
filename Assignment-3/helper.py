@@ -26,6 +26,15 @@ def generate(filename):
             s.add(tag)
     return s
 
+class DummyDecoder(pt.Decoder):
+    """
+    Example of dummy decoder.
+    """
+    def __call__(self, tagger, sentence):
+        print(sentence)
+        return ['This', 'is', 'dummy', 'tag']
+
+# hmm = pt.HMMTagger(decoder = DummyDecoder())
 
 hmm = pt.HMMTagger()
 

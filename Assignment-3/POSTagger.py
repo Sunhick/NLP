@@ -19,6 +19,8 @@ import random
 # from functools import partial
 # Bigrams = partial(Ngrams, n = 2)
 
+from abc import ABCMeta, abstractmethod
+
 # for calculating log probabilities
 from math import log10
 from copy import deepcopy
@@ -86,7 +88,7 @@ class Line(object):
 
 class POSFile(object):
     """
-    Abstraction over words-tags, lines as a file
+    Abstraction over words-tags, lines as a POSfile.
     """
     lines = []
 
@@ -138,7 +140,7 @@ class POSFile(object):
 
 class Ngrams(object):
     """
-    Generates the ngrams from the list of words
+    Generates the ngrams from the list of words.
     """
     Ngrams = []
     __index = 0
@@ -158,6 +160,10 @@ class Ngrams(object):
             return self.Ngrams[self.__index-1]
 
 class Bigrams(Ngrams):
+    """
+    Represents the bigrams tokens. This is a
+    vanilla class that inherits from Ngrams.
+    """
     def __init__(self, words):
         super(Bigrams, self).__init__(words, n = 2)
 
@@ -182,7 +188,17 @@ class ProbEntry(object):
         return "Prob={0} id={2} tag={3} BackPtr={1}".     \
             format(self.probability, backptr, id(self), self.tag)
 
-class Viterbi(object):
+class Decoder(object):
+    """
+    Decoder interface 
+    """
+    __metaclass__ = ABCMeta
+
+    @abstractmethod
+    def __call__(self, tagger, sentence):
+        raise NotImplementedError("Should implement this callable method")
+
+class Viterbi(Decoder):
     """
     Stateless viterbi algorithm to decode the sequence using bigram model.
     """
@@ -193,6 +209,10 @@ class Viterbi(object):
         self.end = "end"
 
     def __backTrack(self, viterbi):
+        """
+        Return the tag sequence by following back pointers to states
+        back in time from viterbi.backpointers
+        """
         tagSequence = []
         pointer = viterbi[self.end][self.end].backpointer
         
@@ -207,6 +227,11 @@ class Viterbi(object):
         return tagSequence
 
     def __call__(self, tagger, sentence):
+        """
+        callable method on instance. Takes a hmm tagger instance and sentence.
+        hmm tagger instance provides the tag transition probability and 
+        likelihood probability requried for calculating the tag sequence.
+        """
         tagSequence = []
         # implement viterbi algorithm here
         N = tagger.V
@@ -258,16 +283,29 @@ class HMMTagger(object):
     """
     tagTransitions = likelihood = None
     V = 0       # vocabulary size. Total count of tags
-    tagset = set() 
-    k = 0.0001  # maybe i have to fine tune this to get better accuracy.
+    tagset = set() # vocabulary set/ different POS tags
+    k = 0.0  # maybe i have to fine tune this to get better accuracy.
     __decoder = None
 
-    def __init__(self, decoder = Viterbi()):
+    def __init__(self, k = 0.0001, decoder = Viterbi()):
+        """
+        Initialize the varibles. decoder is paramterized and default decoder is viterbi.
+        Default viterbi uses bigram model sequence. If you want use your own decoder, then 
+        define it and pass it the HMM tagger.
+
+        Defining a decoder: It should be callable on object instance i.e impement 
+        __call__() method. Signature : def __call__(self, hmm_instance, sentence)
+        """
         self.tagTransitions = defaultdict(lambda: defaultdict(float))
         self.likelihood = defaultdict(lambda: defaultdict(float))
+        self.k = k
         self.__decoder = decoder
 
     def Train(self, trainData):
+        """
+        Train the HMM using train data. i.e calculate the 
+        likelihood probabilities and tag transition probabilities.
+        """
         for line in trainData:
             # update the likelihood probabilities
             for word, tag in line:
@@ -285,6 +323,10 @@ class HMMTagger(object):
         self.__normalize()
 
     def __normalize(self):
+        """
+        Normalize the tag transition table and likelihood proabibility table.
+        For easier and faster look up.
+        """
         # -1 because of <s>
         self.tagset = set(self.tagTransitions)
         self.V = len(self.tagset) - 1
@@ -292,7 +334,7 @@ class HMMTagger(object):
         # If i normalize the tag transition table, 
         # I can directly use it and no need for 
         # below two methods.
-        pass
+        # TODO: To be implemented.
 
     def GetTagTransitionProbability(self, fromTag, toTag):
         """
