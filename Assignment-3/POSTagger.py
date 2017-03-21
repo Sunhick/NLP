@@ -7,6 +7,7 @@ POS tagging using HMM (Viterbi algorithm)
 __author__ = "Sunil"
 __email__ = "suba5417@colorado.edu"
 __version__ = "0.1"
+
 import os
 import sys
 import random
@@ -33,6 +34,63 @@ from collections import namedtuple
 
 # progress bar
 from status import printProgressBar
+
+class PennTreebank(object):
+    """
+    Dictionary of all tags in the Penn tree bank. 
+    
+    Can be used to look up penn tree bank codeword to human 
+    understandable Part's of speech
+    """
+    tagset = defaultdict (
+            lambda: '#unknown#',
+            {
+                'CC'    : 'Coordinating conjunction',
+                'CD'    : 'Cardinal number',
+                'DT'    : 'Determiner',
+                'EX'    : 'Existential there',
+                'FW'    : 'Foreign word',
+                'IN'    : 'Preposition or subordinating conjunction',
+                'JJ'    : 'Adjective',
+                'JJR'   : 'Adjective, comparative',
+                'JJS'   : 'Adjective, superlative',
+                'LS'    : 'List item marker',
+                'MD'    : 'Modal',
+                'NN'    : 'Noun, singular or mass',
+                'NNS'   : 'Noun, plural',
+                'NNP'   : 'Proper noun, singular',
+                'NNPS'  : 'Proper noun, plural',
+                'PDT'   : 'Predeterminer',
+                'POS'   : 'Possessive ending',
+                'PRP'   : 'Personal pronoun',
+                'PRP$'  : 'Possessive pronoun',
+                'RB'    : 'Adverb',
+                'RBR'   : 'Adverb, comparative',
+                'RBS'   : 'Adverb, superlative',
+                'RP'    : 'Particle',
+                'SYM'   : 'Symbol',
+                'TO'    : 'to',
+                'UH'    : 'Interjection',
+                'VB'    : 'Verb, base form',
+                'VBD'   : 'Verb, past tense',
+                'VBG'   : 'Verb, gerund or present participle',
+                'VBN'   : 'Verb, past participle',
+                'VBP'   : 'Verb, non-3rd person singular present',
+                'VBZ'   : 'Verb, 3rd person singular present',
+                'WDT'   : 'Wh-determiner',
+                'WP'    : 'Wh-pronoun',
+                'WP$'   : 'Possessive wh-pronoun',
+                'WRB'   : 'Wh-adverb'
+            }
+        )
+
+    @classmethod
+    def lookup(cls, codedTag):
+        """
+        look up coded tag and return human understanable POS.
+        No exception hanlding required because of defaultdict
+        """
+        return cls.tagset[codedTag]
 
 class POSError(Exception):
     """
@@ -83,6 +141,9 @@ class Line(object):
 
     @property
     def Sentence(self):
+        """
+        Get the sentence representation of line as a string
+        """
         words = [wt.word if (not wt.IsFirstWord() and not wt.IsLastWord()) else ""
                      for wt in self.words]
         return " ".join(words).strip()
@@ -93,6 +154,9 @@ class Line(object):
         return self
 
     def __next__(self):
+        """
+        Iterate through the list of words
+        """
         if self.__index >= len(self.words):
             raise StopIteration
         else:
@@ -100,6 +164,10 @@ class Line(object):
             return self.words[self.__index-1]
 
     def __eq__(self, other):
+        """
+        compare if two given sentences are same. 
+        Returns True if two sentences have same (word, tag) pair in same order.
+        """
         for wt in zip(self.words, other.words):
             w1, t1 = wt[0]
             w2, t2 = wt[0]
@@ -159,7 +227,6 @@ class POSFile(object):
 
     def RandomSplit(self, train_percent):
         # lines = deepcopy(self.lines)
-        random.shuffle(self.lines)
         random.shuffle(self.lines)
         size = len(self.lines)
         train_len = int(size*train_percent/100)
@@ -272,8 +339,13 @@ class Viterbi(Decoder):
         # not leading to a infinite set of tags.
         viterbi[0][self.start][self.start] = None
 
-        word = tokens[0]
+        # performance: avoid using dots in loops to gain perf.
+        Log10TagTransitionProbability = tagger.Log10TagTransitionProbability
+        Log10LikelihoodProbability = tagger.Log10LikelihoodProbability
+        tagset = tagger.tagset
+
         # initialization step
+        word = tokens[0]
         for state in tagger.tagset:
             viterbi[1][state][word].probability = log10(1)                                    \
                 + tagger.Log10TagTransitionProbability(Constants.kSENTENCE_BEGIN, state)      \
@@ -286,24 +358,24 @@ class Viterbi(Decoder):
         for time in range(1, T):
             cword = tokens[time]
             pword = tokens[time-1]
-            for state in tagger.tagset:
-                # tuple of (prob. entry and prob. value)
+            for state in tagset:
+                # tuple of (previous prob. entry and prob. value)
                 prbs = [
                     (viterbi[time][sp][pword], 
-                        viterbi[time][sp][pword].probability                            \
-                        + tagger.Log10TagTransitionProbability(sp, state)                 \
-                        + tagger.Log10LikelihoodProbability(state, cword))
-                    for sp in tagger.tagset 
+                        viterbi[time][sp][pword].probability                                \
+                        + Log10TagTransitionProbability(sp, state)                          \
+                        + Log10LikelihoodProbability(state, cword))
+                    for sp in tagset 
                     ]
 
-                backptr, prob = max(prbs, key=itemgetter(1))
-                viterbi[time+1][state][cword].probability = prob
+                backptr, logprob = max(prbs, key=itemgetter(1))
+                viterbi[time+1][state][cword].probability = logprob
                 viterbi[time+1][state][cword].tag = state
                 viterbi[time+1][state][cword].word = cword
                 viterbi[time+1][state][cword].backpointer = backptr
 
         # termination step
-        final = max([viterbi[T][s][tokens[T-1]] for s in tagger.tagset],      \
+        final = max([viterbi[T][s][tokens[T-1]] for s in tagset],      \
                         key=attrgetter("probability"))
         viterbi[T+1][self.end][self.end].backpointer = final
 
@@ -328,8 +400,8 @@ class FastViterbi(Decoder):
         hmm tagger instance provides the tag transition probability and 
         likelihood probability requried for calculating the tag sequence.
         """
-        raise POSError("Use regular Viterbi! This has to be implemented" 
-            + " correctly and faster than regular viterbi.")
+        #raise POSError("Use regular Viterbi! This has to be implemented" 
+        #    + " correctly and faster than regular viterbi.")
 
         tagSequence = []
         # implement viterbi algorithm here
@@ -350,8 +422,8 @@ class FastViterbi(Decoder):
         # initialization step
         for state in tagger.tagset:
             viterbi[level][state][tokens[0]].probability = log10(1)                             \
-                + tagger.GetTagTransitionProbability(Constants.kSENTENCE_BEGIN, state)          \
-                + tagger.GetLikelihoodProbability(state, tokens[0])
+                + tagger.Log10TagTransitionProbability(Constants.kSENTENCE_BEGIN, state)          \
+                + tagger.Log10LikelihoodProbability(state, tokens[0])
             viterbi[level][state][tokens[0]].tag = state
             viterbi[level][state][tokens[0]].word = tokens[0]
             viterbi[level][state][tokens[0]].backpointer = viterbi[0][self.start][self.start]
@@ -367,8 +439,8 @@ class FastViterbi(Decoder):
                 prbs = [
                     (viterbi[level][sp][tokens[time-1]], 
                         viterbi[level][sp][tokens[time-1]].probability                      \
-                        + tagger.GetTagTransitionProbability(sp, state)                     \
-                        + tagger.GetLikelihoodProbability(state, tokens[time]))
+                        + tagger.Log10TagTransitionProbability(sp, state)                     \
+                        + tagger.Log10LikelihoodProbability(state, tokens[time]))
                     for sp in tagger.tagset 
                     ]
 
@@ -396,7 +468,9 @@ class FastViterbi(Decoder):
         final = max([viterbi[level][s][tokens[T-1]] for s in tagger.tagset],      \
                         key=attrgetter("probability"))
         viterbi[level][self.end][self.end].backpointer = final
-        tagSequence.append(final.tag)
+        
+        # no need to add final tag. It's going to be none
+        # tagSequence.append(final.tag)
         return tagSequence
 
 class HMMTagger(object):
@@ -469,13 +543,14 @@ class HMMTagger(object):
 
     def GetTagTransitionProbability(self, fromTag, toTag):
         """
+        estimate tag transition probability using MLE with add-k smoothing -
+
                       C(X, Y) + k
         P(Y | X) =   ______________
                         C(X) + Vk
 
         Use add-k with k = 0.0001 ? (assignment-2 value)
         """
-        # return log10(self.tagTransitions[fromTag][toTag]+.0000001)
         prob = 0.0
         cxy = self.tagTransitions[fromTag][toTag]
         cx = sum(self.tagTransitions[fromTag].values())
@@ -484,13 +559,13 @@ class HMMTagger(object):
 
     def GetLikelihoodProbability(self, tag, word):
         """
+        Estimate maximum likelihood (MLE) with smoothing
                             C(tag, word) + k
         P(word | tag) =    ___________________
                               C(tag) + Vk
 
         Use add-k with k = 0.0001 ? (assignment-2 value)
         """
-        # return log10(self.likelihood[tag][word]+.00000001)
         prob = 0.0
         ctagword = self.likelihood[tag][word]
         ctag = sum(self.likelihood[tag].values())
@@ -498,20 +573,34 @@ class HMMTagger(object):
         return float(prob)
 
     def Log10TagTransitionProbability(self, fromTag, toTag):
+        """
+        Estimate log10 tag transition table. This method will never throw exception. 
+        GetTagTransitionProbability will never be zero because of add-k smoothing.
+        """
         try:
+            # return log10(self.tagTransitions[fromTag][toTag]+.0000001)
             return log10(self.GetTagTransitionProbability(fromTag, toTag))
         except ValueError:
             # If there's any math domain error. Just return probability as 0.
             return float(0)
 
     def Log10LikelihoodProbability(self, tag, word):
+        """
+        Estimate log10 likelihood transition table.
+        GetLikelihoodProbability will never be zero because of add-k smoothing.
+        """
         try:
+            # return log10(self.likelihood[tag][word]+.00000001)
             return log10(self.GetLikelihoodProbability(tag,word))
         except ValueError:
             # If there's any math domain error. Just return probability as 0.
             return float(0)
 
     def Decode(self, sentence):
+        """
+        Get the POS tagging sequence for the given sentence
+        by calling decoder instance. default decoder is viterbi with bigram model.
+        """
         return self.__decoder(self, sentence)
 
 def main(args):
@@ -520,8 +609,8 @@ def main(args):
     data = POSFile(filename)
 
     # split data as 80:20 for train and test 
-    train, test = data.Split(80)
-    tagger = HMMTagger(k = 0.0001, decoder = Viterbi())
+    train, test = data.RandomSplit(80)
+    tagger = HMMTagger(k = .0000001, decoder = Viterbi())
     tagger.Train(train)
 
     formatter = lambda word, tag: "{0}\t{1}\n".format(word, tag)
@@ -529,17 +618,19 @@ def main(args):
 
     current = 0
     total = len(test)
+    # decode = tagger.Decode
     print("\nDecoding the tag sequence for test data...\n")
     with open("berp-key.txt", "w") as goldFile,         \
          open("berp-out.txt", "w") as outFile:
         for line in test:
             sentence = line.Sentence
-            if not sentence.split():
+            words = sentence.split()
+            if not words:
                 continue
-            # print("S =", sentence)
             tagSequence = tagger.Decode(sentence)
 
-            assert(len(tagSequence) == len(sentence.split()))
+            # assert len(tagSequence) == len(words),   \
+            #         "total tag sequence and len of words in sentence should be equal"
 
             for wt in line:
                 if not wt.IsFirstWord() and not wt.IsLastWord():
@@ -547,12 +638,12 @@ def main(args):
                     goldFile.write(formatter(w, t))
             goldFile.write(endOfSentence)
 
-            for w, t in zip(sentence.split(), tagSequence):
+            for w, t in zip(words, tagSequence):
                 outFile.write(formatter(w, t))
             outFile.write(endOfSentence)
 
             current += 1
-            printProgressBar(current, total, prefix="Progress:", suffix="Complete", length=50)
+            printProgressBar(current, total, prefix="Progress:", suffix="completed", length=50)
 
 if __name__ == "__main__":
     main(sys.argv[1:])
