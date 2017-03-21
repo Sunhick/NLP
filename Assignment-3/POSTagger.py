@@ -35,6 +35,8 @@ from collections import namedtuple
 # progress bar
 from status import printProgressBar
 
+import _pickle as cPickle
+
 class PennTreebank(object):
     """
     Dictionary of all tags in the Penn tree bank. 
@@ -45,42 +47,42 @@ class PennTreebank(object):
     tagset = defaultdict (
             lambda: '#unknown#',
             {
-                'CC'    : 'Coordinating conjunction',
-                'CD'    : 'Cardinal number',
-                'DT'    : 'Determiner',
-                'EX'    : 'Existential there',
-                'FW'    : 'Foreign word',
-                'IN'    : 'Preposition or subordinating conjunction',
-                'JJ'    : 'Adjective',
-                'JJR'   : 'Adjective, comparative',
-                'JJS'   : 'Adjective, superlative',
-                'LS'    : 'List item marker',
-                'MD'    : 'Modal',
-                'NN'    : 'Noun, singular or mass',
-                'NNS'   : 'Noun, plural',
-                'NNP'   : 'Proper noun, singular',
-                'NNPS'  : 'Proper noun, plural',
-                'PDT'   : 'Predeterminer',
-                'POS'   : 'Possessive ending',
-                'PRP'   : 'Personal pronoun',
-                'PRP$'  : 'Possessive pronoun',
-                'RB'    : 'Adverb',
-                'RBR'   : 'Adverb, comparative',
-                'RBS'   : 'Adverb, superlative',
-                'RP'    : 'Particle',
-                'SYM'   : 'Symbol',
-                'TO'    : 'to',
-                'UH'    : 'Interjection',
-                'VB'    : 'Verb, base form',
-                'VBD'   : 'Verb, past tense',
-                'VBG'   : 'Verb, gerund or present participle',
-                'VBN'   : 'Verb, past participle',
-                'VBP'   : 'Verb, non-3rd person singular present',
-                'VBZ'   : 'Verb, 3rd person singular present',
-                'WDT'   : 'Wh-determiner',
-                'WP'    : 'Wh-pronoun',
-                'WP$'   : 'Possessive wh-pronoun',
-                'WRB'   : 'Wh-adverb'
+                "CC"    : "Coordinating conjunction",
+                "CD"    : "Cardinal number",
+                "DT"    : "Determiner",
+                "EX"    : "Existential there",
+                "FW"    : "Foreign word",
+                "IN"    : "Preposition or subordinating conjunction",
+                "JJ"    : "Adjective",
+                "JJR"   : "Adjective, comparative",
+                "JJS"   : "Adjective, superlative",
+                "LS"    : "List item marker",
+                "MD"    : "Modal",
+                "NN"    : "Noun, singular or mass",
+                "NNS"   : "Noun, plural",
+                "NNP"   : "Proper noun, singular",
+                "NNPS"  : "Proper noun, plural",
+                "PDT"   : "Predeterminer",
+                "POS"   : "Possessive ending",
+                "PRP"   : "Personal pronoun",
+                "PRP$"  : "Possessive pronoun",
+                "RB"    : "Adverb",
+                "RBR"   : "Adverb, comparative",
+                "RBS"   : "Adverb, superlative",
+                "RP"    : "Particle",
+                "SYM"   : "Symbol",
+                "TO"    : "to",
+                "UH"    : "Interjection",
+                "VB"    : "Verb, base form",
+                "VBD"   : "Verb, past tense",
+                "VBG"   : "Verb, gerund or present participle",
+                "VBN"   : "Verb, past participle",
+                "VBP"   : "Verb, non-3rd person singular present",
+                "VBZ"   : "Verb, 3rd person singular present",
+                "WDT"   : "Wh-determiner",
+                "WP"    : "Wh-pronoun",
+                "WP$"   : "Possessive wh-pronoun",
+                "WRB"   : "Wh-adverb"
             }
         )
 
@@ -99,6 +101,9 @@ class POSError(Exception):
     pass
 
 class Constants(object):
+    """
+    POS tagger constants
+    """
     kSENTENCE_BEGIN = "<s>"
     kSENTENCE_END = "</s>"
 
@@ -220,12 +225,18 @@ class POSFile(object):
         return self.lines
 
     def Split(self, train_percent):
+        """
+        Split the lines into train and test set.
+        """
         size = len(self.lines)
         train_len = int(size*train_percent/100)
         test_len = size - train_len
         return self.lines[:train_len], self.lines[-test_len:]
 
     def RandomSplit(self, train_percent):
+        """
+        Shuffle & split the lines into train and test set.
+        """
         # lines = deepcopy(self.lines)
         random.shuffle(self.lines)
         size = len(self.lines)
@@ -276,6 +287,9 @@ class ProbEntry(object):
         self.word = None
 
     def __str__(self):
+        """
+        string representation of ProbEntry.
+        """
         backptr = id(self.backpointer) if self.backpointer else None
         return "Prob={0} id={2} tag={3} word={4} BackPtr={1}".     \
             format(self.probability, backptr, id(self), self.tag, self.word)
@@ -609,7 +623,7 @@ def main(args):
     data = POSFile(filename)
 
     # split data as 80:20 for train and test 
-    train, test = data.RandomSplit(80)
+    train, test = data.RandomSplit(90)
     tagger = HMMTagger(k = .0000001, decoder = Viterbi())
     tagger.Train(train)
 
@@ -618,8 +632,12 @@ def main(args):
 
     current = 0
     total = len(test)
+
+    expectedTags = []
+    predictedTags = []
+
     # decode = tagger.Decode
-    print("\nDecoding the tag sequence for test data...\n")
+    print("\nDecoding tag sequence for test data:\n")
     with open("berp-key.txt", "w") as goldFile,         \
          open("berp-out.txt", "w") as outFile:
         for line in test:
@@ -629,6 +647,7 @@ def main(args):
                 continue
             tagSequence = tagger.Decode(sentence)
 
+            predictedTags.extend(tagSequence)
             # assert len(tagSequence) == len(words),   \
             #         "total tag sequence and len of words in sentence should be equal"
 
@@ -636,6 +655,7 @@ def main(args):
                 if not wt.IsFirstWord() and not wt.IsLastWord():
                     w, t = wt
                     goldFile.write(formatter(w, t))
+                    expectedTags.append(t)
             goldFile.write(endOfSentence)
 
             for w, t in zip(words, tagSequence):
@@ -644,6 +664,14 @@ def main(args):
 
             current += 1
             printProgressBar(current, total, prefix="Progress:", suffix="completed", length=50)
+
+    # from confusion_matrix import plotcnf
+    # plotcnf(expectedTags, predictedTags)
+    # with open('exp.pkl', 'wb') as out:
+    #     cPickle.dump(expectedTags, out, protocol=2)
+
+    # with open('pred.pkl', 'wb') as out:
+    #     cPickle.dump(predictedTags, out, protocol=2)
 
 if __name__ == "__main__":
     main(sys.argv[1:])
