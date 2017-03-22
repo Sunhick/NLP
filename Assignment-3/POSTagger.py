@@ -1,10 +1,14 @@
 #!/usr/bin/python3
 
 """
-POS tagging using HMM (Viterbi algorithm)
+Part of speech tagging in python using Hidden Markov Model.
+
+POS tagging using Hidden Markov model (Viterbi algorithm)
 """
 
 __author__ = "Sunil"
+__copyright__ = "Copyright (c) 2017 Sunil"
+__license__ = "MIT License"
 __email__ = "suba5417@colorado.edu"
 __version__ = "0.1"
 
@@ -35,14 +39,12 @@ from collections import namedtuple
 # progress bar
 from status import printProgressBar
 
-import _pickle as cPickle
-
 class PennTreebank(object):
     """
     Dictionary of all tags in the Penn tree bank. 
     
     Can be used to look up penn tree bank codeword to human 
-    understandable Part's of speech
+    understandable Parts of speech
     """
     tagset = defaultdict (
             lambda: '#unknown#',
@@ -130,6 +132,9 @@ class WordTag(namedtuple('WordTag', ['word', 'tag'], verbose=False)):
     def IsFirstWord(self):
         return self.word == Constants.kSENTENCE_BEGIN
 
+    def __eq__(self, other):
+        return (self.word == other.word and self.tag == other.tag)
+
 class Line(object):
     """
     Represents the sentence as collection of words and thier 
@@ -173,10 +178,8 @@ class Line(object):
         compare if two given sentences are same. 
         Returns True if two sentences have same (word, tag) pair in same order.
         """
-        for wt in zip(self.words, other.words):
-            w1, t1 = wt[0]
-            w2, t2 = wt[0]
-            if (w1 != w2 and t1 != t2):
+        for wt1, wt2 in zip(self.words, other.words):
+            if (wt1 != wt2):
                 return False
         return True
 
@@ -435,8 +438,8 @@ class FastViterbi(Decoder):
         level = 1
         # initialization step
         for state in tagger.tagset:
-            viterbi[level][state][tokens[0]].probability = log10(1)                             \
-                + tagger.Log10TagTransitionProbability(Constants.kSENTENCE_BEGIN, state)          \
+            viterbi[level][state][tokens[0]].probability = log10(1)                                 \
+                + tagger.Log10TagTransitionProbability(Constants.kSENTENCE_BEGIN, state)            \
                 + tagger.Log10LikelihoodProbability(state, tokens[0])
             viterbi[level][state][tokens[0]].tag = state
             viterbi[level][state][tokens[0]].word = tokens[0]
@@ -452,8 +455,8 @@ class FastViterbi(Decoder):
                 # tuple of (prob. entry and prob. value)
                 prbs = [
                     (viterbi[level][sp][tokens[time-1]], 
-                        viterbi[level][sp][tokens[time-1]].probability                      \
-                        + tagger.Log10TagTransitionProbability(sp, state)                     \
+                        viterbi[level][sp][tokens[time-1]].probability                          \
+                        + tagger.Log10TagTransitionProbability(sp, state)                       \
                         + tagger.Log10LikelihoodProbability(state, tokens[time]))
                     for sp in tagger.tagset 
                     ]
@@ -559,11 +562,11 @@ class HMMTagger(object):
         """
         estimate tag transition probability using MLE with add-k smoothing -
 
-                      C(X, Y) + k
-        P(Y | X) =   ______________
-                        C(X) + Vk
+                                  C(tag[i-1], tag[i]) + k
+        P(tag[i] | tag[i-1]) =   __________________________
+                                        C(tag[i-1]) + Vk
 
-        Use add-k with k = 0.0001 ? (assignment-2 value)
+        Use add-k with k = 0.0001 as default value
         """
         prob = 0.0
         cxy = self.tagTransitions[fromTag][toTag]
@@ -573,12 +576,13 @@ class HMMTagger(object):
 
     def GetLikelihoodProbability(self, tag, word):
         """
-        Estimate maximum likelihood (MLE) with smoothing
+        Estimate maximum likelihood (MLE) with smoothing -
+
                             C(tag, word) + k
         P(word | tag) =    ___________________
                               C(tag) + Vk
 
-        Use add-k with k = 0.0001 ? (assignment-2 value)
+        Use add-k with k = 0.0001 as default value
         """
         prob = 0.0
         ctagword = self.likelihood[tag][word]
@@ -590,6 +594,8 @@ class HMMTagger(object):
         """
         Estimate log10 tag transition table. This method will never throw exception. 
         GetTagTransitionProbability will never be zero because of add-k smoothing.
+
+        returns math.log10(P(tag[i] | tag[i-1]))
         """
         try:
             # return log10(self.tagTransitions[fromTag][toTag]+.0000001)
@@ -602,6 +608,8 @@ class HMMTagger(object):
         """
         Estimate log10 likelihood transition table.
         GetLikelihoodProbability will never be zero because of add-k smoothing.
+
+        returns math.log10(P(word | tag))
         """
         try:
             # return log10(self.likelihood[tag][word]+.00000001)
@@ -623,7 +631,7 @@ def main(args):
     data = POSFile(filename)
 
     # split data as 80:20 for train and test 
-    train, test = data.RandomSplit(90)
+    train, test = data.RandomSplit(80)
     tagger = HMMTagger(k = .0000001, decoder = Viterbi())
     tagger.Train(train)
 
@@ -632,9 +640,6 @@ def main(args):
 
     current = 0
     total = len(test)
-
-    expectedTags = []
-    predictedTags = []
 
     # decode = tagger.Decode
     print("\nDecoding tag sequence for test data:\n")
@@ -647,7 +652,6 @@ def main(args):
                 continue
             tagSequence = tagger.Decode(sentence)
 
-            predictedTags.extend(tagSequence)
             # assert len(tagSequence) == len(words),   \
             #         "total tag sequence and len of words in sentence should be equal"
 
@@ -655,7 +659,6 @@ def main(args):
                 if not wt.IsFirstWord() and not wt.IsLastWord():
                     w, t = wt
                     goldFile.write(formatter(w, t))
-                    expectedTags.append(t)
             goldFile.write(endOfSentence)
 
             for w, t in zip(words, tagSequence):
@@ -664,14 +667,6 @@ def main(args):
 
             current += 1
             printProgressBar(current, total, prefix="Progress:", suffix="completed", length=50)
-
-    # from confusion_matrix import plotcnf
-    # plotcnf(expectedTags, predictedTags)
-    # with open('exp.pkl', 'wb') as out:
-    #     cPickle.dump(expectedTags, out, protocol=2)
-
-    # with open('pred.pkl', 'wb') as out:
-    #     cPickle.dump(predictedTags, out, protocol=2)
 
 if __name__ == "__main__":
     main(sys.argv[1:])

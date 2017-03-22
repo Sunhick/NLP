@@ -5,7 +5,10 @@ helper file for POSTagger
 """
 
 __author__ = "Sunil"
+__copyright__ = "Copyright (c) 2017 Sunil"
+__license__ = "MIT License"
 __email__ = "suba5417@colorado.edu"
+__version__ = "0.1"
 
 import POSTagger as pt
 
