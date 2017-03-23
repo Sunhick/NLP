@@ -15,16 +15,24 @@ __license__ = "MIT License"
 __email__ = "suba5417@colorado.edu"
 __version__ = "0.1"
 
+import os
 import sys
 import argparse
 import itertools
 import numpy as np
 import matplotlib.pyplot as plt
 
-from POSTagger import POSFile
-
 from sklearn import metrics
+from POSTagger import POSFile 
+from matplotlib.backends.backend_pdf import PdfPages
 
+from profilehooks import timecall
+from profilehooks import coverage
+from profilehooks import profile
+
+# @profile
+# @timecall
+# @coverage
 def plot_confusion_matrix(cm, classes, normalize=False, title="Confusion matrix", cmap=plt.cm.Blues):
     """confusion matrix
 
@@ -34,6 +42,9 @@ def plot_confusion_matrix(cm, classes, normalize=False, title="Confusion matrix"
     The higher the diagonal values of the confusion matrix the better, indicating many correct predictions.
     """
     np.set_printoptions(precision=2)
+
+    fig = plt.figure(figsize=(19, 14.9))  # Don't create a humongous figure
+    # fig.set_dpi(10)
 
     plt.imshow(cm, interpolation="nearest", cmap=cmap)
     plt.title(title)
@@ -59,16 +70,31 @@ def plot_confusion_matrix(cm, classes, normalize=False, title="Confusion matrix"
     plt.tight_layout()
     plt.ylabel("True label")
     plt.xlabel("Predicted label")
-    plt.show()
-
+    # plt.show()
+    # plt.savefig('test.pdf', format='pdf')
+    # plt.savefig('plot1.png')
+    with PdfPages('confusion_matrix.pdf') as pdf:
+      pdf.savefig(fig)
 
 def plotcnf(expectedTags, predictedTags):
   cnf_matrix = metrics.confusion_matrix(expectedTags, predictedTags)
   class_names = list(set(expectedTags))
 
+  # none of the plots look legible. maybe cnf matrix is huge ? 35x35 ?
+  # import pandas as pd
+  # import seaborn as sn
+  # df_cm = pd.DataFrame(cnf_matrix, index = class_names, columns = class_names)
+  # plt.figure(figsize = (10,7))
+  # sn.heatmap(df_cm, annot=True)
+  # sn.plt.show()
+
   # Plot non-normalized confusion matrix
-  plt.figure()
   plot_confusion_matrix(cnf_matrix, classes=class_names, title="Confusion matrix")
+
+  # open confusion matrix file
+  # i only know how to open file in macos
+  if sys.platform == "darwin":
+    os.system("open confusion_matrix.pdf")
 
 def main(args):
   goldFilename = args[1]
@@ -79,16 +105,19 @@ def main(args):
 
   assert len(gdata.Lines) == len(odata.Lines), "gold file and output file have different line count!"
 
+  # I will not consider first and last word. Last word in gold file is period anyway. 
+  # So the accuracy I get here will not match evalPOSTagger.py accuracy.
   expectedTags = [wt.tag for e in gdata.Lines for wt in e.words           \
-                    if not wt.IsFirstWord()]
+                    if not wt.IsFirstWord() and not wt.IsLastWord()]
 
   predictedTags = [wt.tag for e in odata.Lines for wt in e.words           \
-                    if not wt.IsFirstWord()]
+                    if not wt.IsFirstWord() and not wt.IsLastWord()]
 
-  # plotcnf(expectedTags, predictedTags)
+  plotcnf(expectedTags, predictedTags)
 
   print("Accuracy =", metrics.accuracy_score(expectedTags, predictedTags))
   print("Precision =", metrics.precision_score(expectedTags, predictedTags, average='weighted'))
+  
   # recall throws warning, because FP = 0 and we end up 0/0
   # print("Recall =", metrics.recall_score(expectedTags, predictedTags, average='weighted'))
 
