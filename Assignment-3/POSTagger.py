@@ -36,9 +36,6 @@ from operator import attrgetter
 from collections import defaultdict
 from collections import namedtuple
 
-# progress bar
-from status import printProgressBar
-
 class PennTreebank(object):
     """
     Dictionary of all tags in the Penn tree bank. 
@@ -213,7 +210,16 @@ class POSFile(object):
                     sentence.AddWordTag(Constants.kSENTENCE_BEGIN, Constants.kSENTENCE_BEGIN)
                     continue
 
-                word, tag = line.split()
+                splits = line.split()
+                word = tag = None
+
+                if (len(splits) == 2):
+                    # training file
+                    word, tag = line.split()
+                else:
+                    # test file.
+                    word = splits[0]
+                    tag = ""
 
                 # TODO: Should i ignore the periods?
                 # Marks the last word in the sentence
@@ -625,6 +631,22 @@ class HMMTagger(object):
         """
         return self.__decoder(self, sentence)
 
+def printProgressBar (iteration, total, prefix = '', suffix = '', decimals = 1, length = 100, fill = '█'):
+    """
+    Show progress bar
+    """
+    percent = ("{0:." + str(decimals) + "f}").format(100 * (iteration / float(total)))
+    fLength = int(length * iteration // total)
+    bars = fill * fLength + '-' * (length - fLength)
+    
+    # progressbar = \
+    #     lambda prefix, bars, precent, suffix: "\r%s |%s| %s%% %s".format(prefix, bars, percent, suffix)
+    progressbar = ("\r{0} |{1}| {2}% {3}").format(prefix, bars, percent, suffix)
+    print(progressbar, end = '\r')
+    
+    if iteration == total: 
+        print(os.linesep)
+
 def main(args):
     trainFilename = args[0]
     testFilename = args[1]
@@ -653,8 +675,7 @@ def main(args):
 
     # decode = model.Decode
     print("Decoding tag sequence for test set.\n")
-    with open("berp-key.txt", "w") as goldFile,         \
-         open("berp-out.txt", "w") as outFile:
+    with open("berp-out.txt", "w") as outFile:
         for line in test:
             sentence = line.Sentence
             words = sentence.split()
@@ -664,12 +685,6 @@ def main(args):
 
             # assert len(tagSequence) == len(words),   \
             #         "total tag sequence and len of words in sentence should be equal"
-
-            for wt in line:
-                if not wt.IsFirstWord() and not wt.IsLastWord():
-                    w, t = wt
-                    goldFile.write(formatter(w, t))
-            goldFile.write(endOfSentence)
 
             for w, t in zip(words, tagSequence):
                 outFile.write(formatter(w, t))
