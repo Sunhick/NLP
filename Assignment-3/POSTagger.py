@@ -626,13 +626,74 @@ class HMMTagger(object):
         return self.__decoder(self, sentence)
 
 def main(args):
+    trainFilename = args[0]
+    testFilename = args[1]
+
+    # train(filename)
+    trainFile = POSFile(trainFilename)
+    testFile = POSFile(testFilename)
+
+    # get the train and test 
+    train, test = trainFile.Lines, testFile.Lines
+    print()
+    print("total train set =", len(train))
+    print("total test set =", len(test))
+
+    model = HMMTagger(k = .0000001, decoder = Viterbi())
+
+    print()
+    print("Training the HMM model.")
+    model.Train(train)
+
+    formatter = lambda word, tag: "{0}\t{1}\n".format(word, tag)
+    endOfSentence = ".\t.{newline}{newline}".format(newline=os.linesep)
+
+    current = 0
+    total = len(test)
+
+    # decode = model.Decode
+    print("Decoding tag sequence for test set.\n")
+    with open("berp-key.txt", "w") as goldFile,         \
+         open("berp-out.txt", "w") as outFile:
+        for line in test:
+            sentence = line.Sentence
+            words = sentence.split()
+            if not words:
+                continue
+            tagSequence = model.Decode(sentence)
+
+            # assert len(tagSequence) == len(words),   \
+            #         "total tag sequence and len of words in sentence should be equal"
+
+            for wt in line:
+                if not wt.IsFirstWord() and not wt.IsLastWord():
+                    w, t = wt
+                    goldFile.write(formatter(w, t))
+            goldFile.write(endOfSentence)
+
+            for w, t in zip(words, tagSequence):
+                outFile.write(formatter(w, t))
+            outFile.write(endOfSentence)
+
+            current += 1
+            printProgressBar(current, total, prefix="Progress:", suffix="completed", length=50)
+    print()
+
+def _testmain(args):
     filename = args[0]
     # train(filename)
     data = POSFile(filename)
 
     # split data as 80:20 for train and test 
     train, test = data.RandomSplit(80)
+    print()
+    print("total train set =", len(train))
+    print("total test set =", len(test))
+
     tagger = HMMTagger(k = .0000001, decoder = Viterbi())
+
+    print()
+    print("Training the HMM model.")
     tagger.Train(train)
 
     formatter = lambda word, tag: "{0}\t{1}\n".format(word, tag)
@@ -642,10 +703,11 @@ def main(args):
     total = len(test)
 
     # decode = tagger.Decode
-    print("\nDecoding tag sequence for test data:\n")
-    with open("berp-key.txt", "w") as goldFile,         \
-         open("berp-out.txt", "w") as outFile:
+    print("Decoding tag sequence for test set.\n")
+    with open("berp-keym.txt", "w") as goldFile,         \
+         open("berp-outm.txt", "w") as outFile:
         for line in test:
+            current += 1
             sentence = line.Sentence
             words = sentence.split()
             if not words:
@@ -665,8 +727,13 @@ def main(args):
                 outFile.write(formatter(w, t))
             outFile.write(endOfSentence)
 
-            current += 1
             printProgressBar(current, total, prefix="Progress:", suffix="completed", length=50)
 
 if __name__ == "__main__":
-    main(sys.argv[1:])
+    argv = sys.argv
+    if len(argv) < 2:
+        print("Incorrect number of arguments!")
+        print("usage: python3 POSTagger.py <train-file> <test-file>")
+        sys.exit(0)
+    
+    main(argv[1:])

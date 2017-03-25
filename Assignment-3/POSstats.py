@@ -26,9 +26,9 @@ from sklearn import metrics
 from POSTagger import POSFile 
 from matplotlib.backends.backend_pdf import PdfPages
 
-from profilehooks import timecall
-from profilehooks import coverage
-from profilehooks import profile
+# from profilehooks import timecall
+# from profilehooks import coverage
+# from profilehooks import profile
 
 # @profile
 # @timecall
