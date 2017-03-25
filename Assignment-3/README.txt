@@ -1,7 +1,7 @@
 1. How to run the POS tagger:
 ============================
 
-$ python3 python3 murthy_sunil_PA3.py train_file.txt test_file.txt 
+$ python3 murthy_sunil_PA3.py train_file.txt test_file.txt 
 
 After running the above script, it creates a berp-out.txt file containing the predicted tags for the test sentences. The format is same as the training file i.e "word <tab> tag".
 
