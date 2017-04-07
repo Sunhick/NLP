@@ -672,25 +672,21 @@ def main(args):
 
     # decode = model.Decode
     # print("Decoding tag sequence for test set.\n")
-    f = "berp-out.txt"
-    with open(f, "w") as outFile:
-        for line in test:
-            sentence = line.Sentence
-            words = sentence.split()
-            if not words:
-                continue
-            tagSequence = model.Decode(sentence)
+    for line in test:
+        sentence = line.Sentence
+        words = sentence.split()
+        if not words:
+            continue
+        tagSequence = model.Decode(sentence)
 
-            # assert len(tagSequence) == len(words),   \
-            #         "total tag sequence and len of words in sentence should be equal"
+        # assert len(tagSequence) == len(words),   \
+        #         "total tag sequence and len of words in sentence should be equal"
 
-            for w, t in zip(words, tagSequence):
-                formatedText = formatter(w, t)
-                outFile.write(formatedText)
-                print(formatedText, end="")
+        for w, t in zip(words, tagSequence):
+            formattedText = formatter(w, t)
+            print(formattedText, end="")
 
-            outFile.write(endOfSentence)
-            print(endOfSentence, end="")
+        print(endOfSentence, end="")
 
     # Flush any pending writes to console
     print(flush=True, end="")
