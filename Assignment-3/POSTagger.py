@@ -201,9 +201,6 @@ class POSFile(object):
         with open(filename, 'r') as file:
             for line in file:
                 if not line.strip():
-                    # end of sentence
-                    self.lines.append(sentence)
-
                     # create a new line holder
                     sentence = Line()
                     # add the word begin marker
@@ -219,13 +216,16 @@ class POSFile(object):
                 else:
                     # test file.
                     word = splits[0]
-                    tag = ""
+                    tag = "."
 
                 # TODO: Should i ignore the periods?
                 # Marks the last word in the sentence
                 if word == "." and tag == ".":
                     # add the word end marker
                     sentence.AddWordTag(Constants.kSENTENCE_END, Constants.kSENTENCE_END)
+
+                    # end of sentence
+                    self.lines.append(sentence)
                 else:
                     sentence.AddWordTag(word, tag)
 
@@ -527,7 +527,7 @@ class HMMTagger(object):
         Train the HMM using train data. i.e calculate the 
         likelihood probabilities and tag transition probabilities.
         """
-        for line in trainData:
+        for line in trainData: 
             # update the likelihood probabilities.
             # No need to track begin/end of sentences for likelihood.
             for wordtag in line:
@@ -577,6 +577,13 @@ class HMMTagger(object):
         prob = 0.0
         cxy = self.tagTransitions[fromTag][toTag]
         cx = sum(self.tagTransitions[fromTag].values())
+        # print("======= Tag Transition=========")
+        # print("from : {0} to: {1}".format(fromTag, toTag))
+        # print("cxy =", cxy)
+        # print("k =", self.k)
+        # print("cx =", cx)
+        # print("V = ", self.V)
+
         prob = (cxy + self.k) / (cx + (self.k * self.V))
         return float(prob)
 
@@ -594,6 +601,13 @@ class HMMTagger(object):
         ctagword = self.likelihood[tag][word]
         ctag = sum(self.likelihood[tag].values())
         prob = (ctagword + self.k) / (ctag + (self.k * self.V))
+
+        # print("======= Likelihood =========")
+        # print("tag : {0} word: {1}".format(tag, word))
+        # print("ctagword =", ctagword)
+        # print("k =", self.k)
+        # print("ctag =", ctag)
+        # print("V = ", self.V)
         return float(prob)
 
     def Log10TagTransitionProbability(self, fromTag, toTag):
@@ -606,6 +620,7 @@ class HMMTagger(object):
         try:
             # return log10(self.tagTransitions[fromTag][toTag]+.0000001)
             return log10(self.GetTagTransitionProbability(fromTag, toTag))
+            # print("Tag Trns = ", p, "From:", fromTag, "toTag:", toTag)
         except ValueError:
             # If there's any math domain error. Just return probability as 0.
             return float(0)
@@ -620,6 +635,7 @@ class HMMTagger(object):
         try:
             # return log10(self.likelihood[tag][word]+.00000001)
             return log10(self.GetLikelihoodProbability(tag,word))
+            # print("likelihood = ", p, "tag:", tag, "word:", word)
         except ValueError:
             # If there's any math domain error. Just return probability as 0.
             return float(0)
@@ -631,22 +647,6 @@ class HMMTagger(object):
         """
         return self.__decoder(self, sentence)
 
-def printProgressBar (iteration, total, prefix = '', suffix = '', decimals = 1, length = 100, fill = '█'):
-    """
-    Show progress bar
-    """
-    percent = ("{0:." + str(decimals) + "f}").format(100 * (iteration / float(total)))
-    fLength = int(length * iteration // total)
-    bars = fill * fLength + '-' * (length - fLength)
-    
-    # progressbar = \
-    #     lambda prefix, bars, precent, suffix: "\r%s |%s| %s%% %s".format(prefix, bars, percent, suffix)
-    progressbar = ("\r{0} |{1}| {2}% {3}").format(prefix, bars, percent, suffix)
-    print(progressbar, end = '\r')
-    
-    if iteration == total: 
-        print(os.linesep)
-
 def main(args):
     trainFilename = args[0]
     testFilename = args[1]
@@ -657,25 +657,23 @@ def main(args):
 
     # get the train and test 
     train, test = trainFile.Lines, testFile.Lines
-    print()
-    print("total train set =", len(train))
-    print("total test set =", len(test))
+    # print()
+    # print("total train set =", len(train))
+    # print("total test set =", len(test))
 
     model = HMMTagger(k = .0000001, decoder = Viterbi())
 
-    print()
-    print("Training the HMM model.")
+    # print()
+    # print("Training the HMM model.")
     model.Train(train)
 
     formatter = lambda word, tag: "{0}\t{1}\n".format(word, tag)
     endOfSentence = ".\t.{newline}{newline}".format(newline=os.linesep)
 
-    current = 0
-    total = len(test)
-
     # decode = model.Decode
-    print("Decoding tag sequence for test set.\n")
-    with open("berp-out.txt", "w") as outFile:
+    # print("Decoding tag sequence for test set.\n")
+    f = "berp-out.txt"
+    with open(f, "w") as outFile:
         for line in test:
             sentence = line.Sentence
             words = sentence.split()
@@ -687,12 +685,15 @@ def main(args):
             #         "total tag sequence and len of words in sentence should be equal"
 
             for w, t in zip(words, tagSequence):
-                outFile.write(formatter(w, t))
-            outFile.write(endOfSentence)
+                formatedText = formatter(w, t)
+                outFile.write(formatedText)
+                print(formatedText, end="")
 
-            current += 1
-            printProgressBar(current, total, prefix="Progress:", suffix="completed", length=50)
-    print()
+            outFile.write(endOfSentence)
+            print(endOfSentence, end="")
+
+    # Flush any pending writes to console
+    print(flush=True, end="")
 
 def _testmain(args):
     filename = args[0]
