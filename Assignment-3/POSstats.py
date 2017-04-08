@@ -124,6 +124,6 @@ def main(args):
 if __name__ == "__main__":
   if len(sys.argv) < 3:
     print("Incorrect number of arguments!")
-    print("usage: python3 <berp-key.txt> <berp-out.txt>")
+    print("usage: python3 POSstats.py <berp-key.txt> <berp-out.txt>")
     sys.exit(0)
   main(sys.argv)

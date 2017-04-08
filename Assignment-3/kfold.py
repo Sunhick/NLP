@@ -18,7 +18,6 @@ import random
 
 from sklearn import metrics
 from sklearn.model_selection import KFold
-from status import printProgressBar
 
 def main(filename):
     kf = KFold(n_splits=5)
