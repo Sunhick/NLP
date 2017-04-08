@@ -39,7 +39,6 @@ def main(filename):
         predictedTags = []
         expectedTags = []
 
-        index = 0
         for line in test:
             sentence = line.Sentence
             words = sentence.split()
@@ -51,8 +50,6 @@ def main(filename):
                     "total tag sequence and len of words in sentence should be equal"
 
             expectedTags = [wt.tag for wt in line if not wt.IsFirstWord() and not wt.IsLastWord()]
-            index += 1
-            printProgressBar(index, test_len, prefix="Progress:", suffix="completed", length=50)
 
         print("Accuracy =", metrics.accuracy_score(expectedTags, predictedTags))
         print("===================")
