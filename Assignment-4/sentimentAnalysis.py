@@ -29,10 +29,21 @@ from nltk.classify import NaiveBayesClassifier
 # import nltk util for checking accuracy
 from nltk.classify import util
 
+# import nltk's wrapper for sklearn modules
+from nltk.classify.scikitlearn import SklearnClassifier
+
 # scikit learn modules
 import numpy as np
 from sklearn import metrics
 from sklearn.model_selection import KFold
+
+from sklearn.feature_extraction.text import TfidfTransformer
+from sklearn.feature_selection import SelectKBest, chi2
+from sklearn.naive_bayes import MultinomialNB
+from sklearn import svm
+from sklearn.naive_bayes import GaussianNB
+from sklearn.pipeline import Pipeline
+
 
 class Constants:
     kPOS = "+"
@@ -55,8 +66,10 @@ class SentimentAnalyzer(object):
 def wordFeatures(allWords):
     englishStopwords = stopwords.words("english")
     words = [(word, True) for word in allWords if word not in englishStopwords]
+    # words = [word for word in allWords if word not in englishStopwords]
     # create a dictionary of words 
     return dict(words)
+    # return words
 
 def getWords(fileAggregateName, label):
     words = []
@@ -101,14 +114,24 @@ def main(args):
     for train_indices, test_indices in splitter(reviews):
         train, test = reviews[train_indices], reviews[test_indices]
 
+        # pipeline = Pipeline([
+        #     ('tfidf', TfidfTransformer()),
+        #     ('chi2', SelectKBest(chi2, k=1000)),
+        #     ('nb', svm.SVC())
+        #     ])
+
+        # model = SklearnClassifier(pipeline)
+        # model.train(train)
         model = NaiveBayesClassifier.train(train)
         accuracy = util.accuracy(model, test)
         print("Accuracy of model =", accuracy*100)
 
         # NLTK implementation of util.accuracy
         # count = 0
+        # tt = pipeline.fit_transform(test)
+        # print(tt)
         # for data, label in test:
-        #     plabel = model.classify(data)
+        #     plabel = model.classify(pipeline.fit_transform(data))
         #     if plabel == label:
         #         count += 1
 
