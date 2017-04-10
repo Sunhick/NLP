@@ -11,12 +11,25 @@ __email__ = "suba5417@colorado.edu"
 __version__ = "0.1"
 
 import sys
+import random
 
 # import the movie review dataset
 from nltk.corpus import movie_reviews
 
 from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
+
+# nltk module also provides a Naive bayes classifier.
+# For now it's okay. Maybe in future i will use 
+# advanced classifier's from sklearn (scikit learn package).
+from nltk.classify import NaiveBayesClassifier
+
+# import nltk util for checking accuracy
+from nltk.classify import util
+
+class Constants:
+    kPOS = "+"
+    kNEG = "-"
 
 class SentimentAnalyzer(object):
     """
@@ -32,8 +45,45 @@ class SentimentAnalyzer(object):
     def __init__(self):
         pass
 
+def wordFeatures(allWords):
+    englishStopwords = stopwords.words("english")
+    words = [(word, True) for word in allWords if word not in englishStopwords]
+    # create a dictionary of words 
+    return dict(words)
+
+def getWords(fileAggregateName, label):
+    words = []
+    for fileid in movie_reviews.fileids(fileAggregateName):
+        w = movie_reviews.words(fileid)
+        words.append((wordFeatures(w), label))
+    return words
+
+def randomSplit(data, percent):
+    random.shuffle(data)
+    size = len(data)
+    train_len = int(size*percent/100)
+    test_len = size - train_len
+    return data[:train_len], data[-test_len:]
+
 def main(args):
-    pass
+    postiveWords = getWords("pos", Constants.kPOS)
+    negativeWords = getWords("neg", Constants.kNEG)
+
+    # Not a good idea to combine words and then split.
+    # because +/- words maybe skewed/ may result in uneven split.
+    # To increase changes of even distribution of words split then 
+    # individually and then combine.
+
+    posTrain, posTest = randomSplit(postiveWords, 80)
+    negTrain, negTest = randomSplit(negativeWords, 80)
+
+    train = posTrain + negTrain
+    test = posTest + negTest
+
+    model = NaiveBayesClassifier.train(train)
+    accuracy = util.accuracy(model, test)
+    print("Accuracy of model = ", accuracy*100)
+
 
 if __name__ == "__main__":
     main(sys.argv)
