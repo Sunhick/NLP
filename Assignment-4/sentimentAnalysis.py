@@ -10,9 +10,11 @@ __license__ = "MIT License"
 __email__ = "suba5417@colorado.edu"
 __version__ = "0.1"
 
+# Python modules
 import sys
 import random
 
+# NLTK modules
 # import the movie review dataset
 from nltk.corpus import movie_reviews
 
@@ -26,6 +28,11 @@ from nltk.classify import NaiveBayesClassifier
 
 # import nltk util for checking accuracy
 from nltk.classify import util
+
+# scikit learn modules
+import numpy as np
+from sklearn import metrics
+from sklearn.model_selection import KFold
 
 class Constants:
     kPOS = "+"
@@ -74,15 +81,29 @@ def main(args):
     # To increase changes of even distribution of words split then 
     # individually and then combine.
 
-    posTrain, posTest = randomSplit(postiveWords, 80)
-    negTrain, negTest = randomSplit(negativeWords, 80)
+    # without kfold 
+    # posTrain, posTest = randomSplit(postiveWords, 80)
+    # negTrain, negTest = randomSplit(negativeWords, 80)
 
-    train = posTrain + negTrain
-    test = posTest + negTest
+    # train = posTrain + negTrain
+    # test = posTest + negTest
 
-    model = NaiveBayesClassifier.train(train)
-    accuracy = util.accuracy(model, test)
-    print("Accuracy of model = ", accuracy*100)
+    # model = NaiveBayesClassifier.train(train)
+    # accuracy = util.accuracy(model, test)
+    # print("Accuracy of model = ", accuracy*100)
+
+    reviews = np.array(postiveWords + negativeWords)
+    # randomize the word distribution
+    random.shuffle(reviews)
+
+    splitter = KFold(n_splits=10).split
+
+    for train_indices, test_indices in splitter(reviews):
+        train, test = reviews[train_indices], reviews[test_indices]
+
+        model = NaiveBayesClassifier.train(train)
+        accuracy = util.accuracy(model, test)
+        print("Accuracy of model = ", accuracy*100)
 
 
 if __name__ == "__main__":
