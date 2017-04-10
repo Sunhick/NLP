@@ -103,7 +103,16 @@ def main(args):
 
         model = NaiveBayesClassifier.train(train)
         accuracy = util.accuracy(model, test)
-        print("Accuracy of model = ", accuracy*100)
+        print("Accuracy of model =", accuracy*100)
+
+        # NLTK implementation of util.accuracy
+        # count = 0
+        # for data, label in test:
+        #     plabel = model.classify(data)
+        #     if plabel == label:
+        #         count += 1
+
+        # print("custom accuracy =", (count/len(test))*100)
 
 
 if __name__ == "__main__":
