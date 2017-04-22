@@ -85,6 +85,9 @@ def randomSplit(data, percent):
     test_len = size - train_len
     return data[:train_len], data[-test_len:]
 
+def mean(numbers):
+    return float(sum(numbers)) / max(len(numbers), 1)
+
 def main(args):
     postiveWords = getWords("pos", Constants.kPOS)
     negativeWords = getWords("neg", Constants.kNEG)
@@ -110,6 +113,7 @@ def main(args):
     random.shuffle(reviews)
 
     splitter = KFold(n_splits=10).split
+    accuracies = []
 
     for train_indices, test_indices in splitter(reviews):
         train, test = reviews[train_indices], reviews[test_indices]
@@ -124,6 +128,7 @@ def main(args):
         # model.train(train)
         model = NaiveBayesClassifier.train(train)
         accuracy = util.accuracy(model, test)
+        accuracies.append(accuracy)
         print("Accuracy of model =", accuracy*100)
 
         # NLTK implementation of util.accuracy
@@ -136,6 +141,10 @@ def main(args):
         #         count += 1
 
         # print("custom accuracy =", (count/len(test))*100)
+
+    # Take average accuracy.
+    avgAcc = mean(accuracies)
+    print("Mean accuracy  =", avgAcc*100)
 
 
 if __name__ == "__main__":
