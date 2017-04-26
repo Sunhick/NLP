@@ -18,6 +18,11 @@ import collections
 
 import numpy as np
 
+import itertools
+from nltk.collocations import BigramCollocationFinder
+from nltk.metrics import BigramAssocMeasures
+from nltk.probability import FreqDist, ConditionalFreqDist
+
 # NLTK modules
 # import the movie review dataset
 from nltk import stem
@@ -35,6 +40,8 @@ from nltk.tokenize import word_tokenize
 # For now it's okay. Maybe in future i will use 
 # advanced classifier's from sklearn (scikit learn package).
 from nltk.classify import NaiveBayesClassifier
+from nltk.classify import DecisionTreeClassifier
+from nltk.classify import maxent
 
 # import nltk util for checking accuracy
 from nltk.classify import util
@@ -54,6 +61,34 @@ from sklearn import svm
 from sklearn.naive_bayes import GaussianNB
 from sklearn.pipeline import Pipeline
 
+word_fd = FreqDist()
+label_word_fd = ConditionalFreqDist()
+ 
+for word in movie_reviews.words(categories=['pos']):
+    word_fd[word.lower()] += 1
+    label_word_fd['pos'][word.lower()] += 1
+ 
+for word in movie_reviews.words(categories=['neg']):
+    word_fd[word.lower()] += 1
+    label_word_fd['neg'][word.lower()] += 1
+ 
+pos_word_count = label_word_fd['pos'].N()
+neg_word_count = label_word_fd['neg'].N()
+total_word_count = pos_word_count + neg_word_count
+ 
+word_scores = {}
+ 
+for word, freq in word_fd.items():
+    pos_score = BigramAssocMeasures.chi_sq(label_word_fd['pos'][word],
+        (freq, pos_word_count), total_word_count)
+    neg_score = BigramAssocMeasures.chi_sq(label_word_fd['neg'][word],
+        (freq, neg_word_count), total_word_count)
+    word_scores[word] = pos_score + neg_score
+
+best = sorted(word_scores.items(), key=lambda w: w[1], reverse=True)[:10000]
+bestwords = set([w for w, s in best]) 
+
+print("===Done===")
 
 class Constants:
     kPOS = "+"
@@ -93,6 +128,11 @@ def wordSanitizer(wordOrg):
     # print(wordOrg, "\t", word)
     return word
 
+def bigram_word_feats(words, score_fn=BigramAssocMeasures.chi_sq, n=200):
+    bigram_finder = BigramCollocationFinder.from_words(words)
+    bigrams = bigram_finder.nbest(score_fn, n)
+    return dict([(ngram, True) for ngram in itertools.chain(words, bigrams)])
+
 def wordFeatures(allWords):
     # without any processing
     # words = [(word, True) for word in allWords]
@@ -102,6 +142,7 @@ def wordFeatures(allWords):
     
     # ignore emptry strings
     cleanWords = list(filter(None, allcleanWords))
+    # return bigram_word_feats(cleanWords)
 
     # create bigram words
     bigrams = list(zip(*[cleanWords[i:] for i in range(2)]))
@@ -109,18 +150,20 @@ def wordFeatures(allWords):
     # create a feature word in the format required by NTLK Naive bayes
     # words = [(" ".join(bigram), True) for bigram in bigrams]
     words = [(bigram, True) for bigram in bigrams]
-
+ 
     # words = [(word, True) for word in allWords]
     # words = [word for word in allWords if word not in englishStopwords]
     # create a dictionary of words 
     return dict(words)
-    # return words
+
+def BestBigrams(allWords):
+    return dict([(word, True) for word in allWords if word in bestwords])
 
 def getLabelledWords(fileAggregateName, label):
     words = []
     for fileid in movie_reviews.fileids(fileAggregateName):
         w = movie_reviews.words(fileid)
-        words.append((wordFeatures(w), label))
+        words.append((BestBigrams(w), label))
     return words
 
 def randomSplit(data, percent):
@@ -187,16 +230,29 @@ def main(args):
     for train_indices, test_indices in splitter(reviews):
         train, test = reviews[train_indices], reviews[test_indices]
 
+        # ================= SVC Classifier =================
         # pipeline = Pipeline([
         #     ('tfidf', TfidfTransformer()),
         #     ('chi2', SelectKBest(chi2, k=1000)),
         #     ('nb', svm.SVC())
         #     ])
-
         # model = SklearnClassifier(pipeline)
         # model.train(train)
+
+        # ================= Naive bayes classifier =================
         model = NaiveBayesClassifier.train(train)
 
+        # ================= MaxEnt classifier =================
+        # encoding = maxent.TypedMaxentFeatureEncoding.train( \
+        #     train, count_cutoff=30, alwayson_features=True)
+
+        # model = maxent.MaxentClassifier.train(train, bernoulli=False, encoding=encoding, trace=0)
+
+        # ================= Decision Tree classifier =================
+        # model = DecisionTreeClassifier.train(   \
+        #     train, entropy_cutoff=0, support_cutoff=0)
+
+        # ================= Statistics about the model =================
         accuracy = util.accuracy(model, test)
         accuracies.append(accuracy)
 
