@@ -14,10 +14,16 @@ __version__ = "0.1"
 import sys
 import random
 import string
+import collections
+
+import numpy as np
 
 # NLTK modules
 # import the movie review dataset
-import nltk
+from nltk import stem
+# from nltk.metrics import precision
+# from nltk.metrics import recall
+# from nltk.metrics import f_measure
 
 from nltk.stem import SnowballStemmer
 from nltk.corpus import movie_reviews
@@ -37,7 +43,7 @@ from nltk.classify import util
 from nltk.classify.scikitlearn import SklearnClassifier
 
 # scikit learn modules
-import numpy as np
+from sklearn.metrics import precision_recall_fscore_support
 from sklearn import metrics
 from sklearn.model_selection import KFold
 
@@ -68,7 +74,7 @@ class SentimentAnalyzer(object):
         pass
 
 # word lemmatizer. plurals to singular words
-lemmatizer = nltk.stem.wordnet.WordNetLemmatizer()
+lemmatizer = stem.wordnet.WordNetLemmatizer()
 
 # keep only the stem words
 stemmer = SnowballStemmer("english")
@@ -88,6 +94,10 @@ def wordSanitizer(wordOrg):
     return word
 
 def wordFeatures(allWords):
+    # without any processing
+    # words = [(word, True) for word in allWords]
+    # return dict(words)
+
     allcleanWords = [wordSanitizer(word) for word in allWords if word not in englishStopwords]
     
     # ignore emptry strings
@@ -97,7 +107,8 @@ def wordFeatures(allWords):
     bigrams = list(zip(*[cleanWords[i:] for i in range(2)]))
 
     # create a feature word in the format required by NTLK Naive bayes
-    words = [(" ".join(bigram), True) for bigram in bigrams]
+    # words = [(" ".join(bigram), True) for bigram in bigrams]
+    words = [(bigram, True) for bigram in bigrams]
 
     # words = [(word, True) for word in allWords]
     # words = [word for word in allWords if word not in englishStopwords]
@@ -121,6 +132,24 @@ def randomSplit(data, percent):
 
 def mean(numbers):
     return float(sum(numbers)) / max(len(numbers), 1)
+
+def classify(model, test):
+    # refsets = collections.defaultdict(set)
+    # testsets = collections.defaultdict(set)
+
+    # for i, (feats, label) in enumerate(test):
+    #     refsets[label].add(i)
+    #     observed = model.classify(feats)
+    #     testsets[observed].add(i)
+
+    # return refsets, testsets
+    trueLabels, predLabels = [], []
+    for feature, label in test:
+        pred = model.classify(feature)
+        predLabels.append(pred)
+        trueLabels.append(label)
+
+    return np.array(trueLabels), np.array(predLabels)
 
 def main(args):
     negativeWords = getLabelledWords("neg", Constants.kNEG)
@@ -150,10 +179,10 @@ def main(args):
     # randomize the word distribution
     np.random.shuffle(reviews)
 
-
-
     splitter = KFold(n_splits=10).split
     accuracies = []
+
+    formatTo3Decimals = lambda header, decimal: "{0}:{1:.3f}".format(header, decimal)
 
     for train_indices, test_indices in splitter(reviews):
         train, test = reviews[train_indices], reviews[test_indices]
@@ -167,9 +196,31 @@ def main(args):
         # model = SklearnClassifier(pipeline)
         # model.train(train)
         model = NaiveBayesClassifier.train(train)
+
         accuracy = util.accuracy(model, test)
         accuracies.append(accuracy)
-        print("Accuracy of model = {0:.3f}".format(accuracy*100.0))
+
+        # predictions = model.classify(test)
+        # refset, predictset = classify(model, test)
+        trueLabels, predLabels = classify(model, test)
+        # print(precision_recall_fscore_support(trueLabels, predLabels, beta = 1.0, average="macro"))
+        precision, recall, f1, support = \
+            precision_recall_fscore_support(trueLabels, predLabels, beta = 1.0, average="macro")
+
+        print(formatTo3Decimals("Accuracy", accuracy))
+        # print(precision, recall, f1, support)
+        print(
+            formatTo3Decimals("Precision", precision),
+            ";",
+            formatTo3Decimals("Recall", recall),
+            ";",
+            formatTo3Decimals("F1", f1))
+        
+        # print("Accuracy:{0:.3f}".format(accuracy))
+        # print("Precision:{}",precision(refset[Constants.kPOS], predictset[Constants.kPOS]))
+        # print("Recall:", recall(refset[Constants.kPOS], predictset[Constants.kPOS]))
+        # print("F1:", f_measure(refset[Constants.kPOS], predictset[Constants.kPOS]))
+
 
         # NLTK implementation of util.accuracy
         # count = 0
