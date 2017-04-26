@@ -61,34 +61,37 @@ from sklearn import svm
 from sklearn.naive_bayes import GaussianNB
 from sklearn.pipeline import Pipeline
 
-word_fd = FreqDist()
-label_word_fd = ConditionalFreqDist()
- 
-for word in movie_reviews.words(categories=['pos']):
-    word_fd[word.lower()] += 1
-    label_word_fd['pos'][word.lower()] += 1
- 
-for word in movie_reviews.words(categories=['neg']):
-    word_fd[word.lower()] += 1
-    label_word_fd['neg'][word.lower()] += 1
- 
-pos_word_count = label_word_fd['pos'].N()
-neg_word_count = label_word_fd['neg'].N()
-total_word_count = pos_word_count + neg_word_count
- 
-word_scores = {}
- 
-for word, freq in word_fd.items():
-    pos_score = BigramAssocMeasures.chi_sq(label_word_fd['pos'][word],
-        (freq, pos_word_count), total_word_count)
-    neg_score = BigramAssocMeasures.chi_sq(label_word_fd['neg'][word],
-        (freq, neg_word_count), total_word_count)
-    word_scores[word] = pos_score + neg_score
+def getTopNBestWords(N=10000):
+    wordDist = FreqDist()
+    labelWordDist = ConditionalFreqDist()
+     
+    for word in movie_reviews.words(categories=['pos']):
+        wordDist[word.lower()] += 1
+        labelWordDist['pos'][word.lower()] += 1
+     
+    for word in movie_reviews.words(categories=['neg']):
+        wordDist[word.lower()] += 1
+        labelWordDist['neg'][word.lower()] += 1
+     
+    pos_word_count = labelWordDist['pos'].N()
+    neg_word_count = labelWordDist['neg'].N()
+    total_word_count = pos_word_count + neg_word_count
+     
+    wordScores = {}
+     
+    for word, freq in wordDist.items():
+        # pos score
+        pos_score = BigramAssocMeasures.chi_sq(labelWordDist['pos'][word], 
+            (freq, pos_word_count), total_word_count)
+        # neg score
+        neg_score = BigramAssocMeasures.chi_sq(labelWordDist['neg'][word], 
+            (freq, neg_word_count), total_word_count)
+        # total word score.
+        wordScores[word] = pos_score + neg_score
 
-best = sorted(word_scores.items(), key=lambda w: w[1], reverse=True)[:10000]
-bestwords = set([w for w, s in best]) 
-
-print("===Done===")
+    best = sorted(wordScores.items(), key=lambda w: w[1], reverse=True)[:N]
+    bestwords = set([w for w, s in best])
+    return bestwords
 
 class Constants:
     kPOS = "+"
@@ -156,7 +159,7 @@ def wordFeatures(allWords):
     # create a dictionary of words 
     return dict(words)
 
-def BestBigrams(allWords):
+def BestBigrams(allWords, bestwords):
     return dict([(word, True) for word in allWords if word in bestwords])
 
 def getLabelledWords(fileAggregateName, label):
@@ -165,6 +168,22 @@ def getLabelledWords(fileAggregateName, label):
         w = movie_reviews.words(fileid)
         words.append((BestBigrams(w), label))
     return words
+
+def getPosNegLabelledWords():
+    bestwords = getTopNBestWords()
+    
+    pos = []
+    for fileid in movie_reviews.fileids('pos'):
+        w = movie_reviews.words(fileid)
+        pos.append((BestBigrams(w, bestwords), Constants.kPOS))
+    
+    neg = []
+    for fileid in movie_reviews.fileids('neg'):
+        w = movie_reviews.words(fileid)
+        neg.append((BestBigrams(w, bestwords), Constants.kNEG))
+    
+    return pos, neg
+
 
 def randomSplit(data, percent):
     random.shuffle(data)
@@ -195,9 +214,10 @@ def classify(model, test):
     return np.array(trueLabels), np.array(predLabels)
 
 def main(args):
-    negativeWords = getLabelledWords("neg", Constants.kNEG)
-    postiveWords = getLabelledWords("pos", Constants.kPOS)
+    # negativeWords = getLabelledWords("neg", Constants.kNEG)
+    # postiveWords = getLabelledWords("pos", Constants.kPOS)
 
+    postiveWords, negativeWords = getPosNegLabelledWords()
     # Not a good idea to combine words and then split.
     # because +/- words maybe skewed/ may result in uneven split.
     # To increase changes of even distribution of words split then 
