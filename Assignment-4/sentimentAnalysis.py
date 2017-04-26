@@ -13,9 +13,13 @@ __version__ = "0.1"
 # Python modules
 import sys
 import random
+import string
 
 # NLTK modules
 # import the movie review dataset
+import nltk
+
+from nltk.stem import SnowballStemmer
 from nltk.corpus import movie_reviews
 
 from nltk.corpus import stopwords
@@ -63,15 +67,45 @@ class SentimentAnalyzer(object):
     def __init__(self):
         pass
 
+# word lemmatizer. plurals to singular words
+lemmatizer = nltk.stem.wordnet.WordNetLemmatizer()
+
+# keep only the stem words
+stemmer = SnowballStemmer("english")
+
+# remove the punctuations and digits from words
+removeDigitsPunctuations = string.punctuation + string.digits
+
+# ignore english stop words
+englishStopwords = stopwords.words("english")
+
+def wordSanitizer(wordOrg):
+    word = wordOrg
+    word = word.translate(str.maketrans('','', removeDigitsPunctuations))
+    word = lemmatizer.lemmatize(word.lower())
+    word = stemmer.stem(word)
+    # print(wordOrg, "\t", word)
+    return word
+
 def wordFeatures(allWords):
-    englishStopwords = stopwords.words("english")
-    words = [(word, True) for word in allWords if word not in englishStopwords]
+    allcleanWords = [wordSanitizer(word) for word in allWords if word not in englishStopwords]
+    
+    # ignore emptry strings
+    cleanWords = list(filter(None, allcleanWords))
+
+    # create bigram words
+    bigrams = list(zip(*[cleanWords[i:] for i in range(2)]))
+
+    # create a feature word in the format required by NTLK Naive bayes
+    words = [(" ".join(bigram), True) for bigram in bigrams]
+
+    # words = [(word, True) for word in allWords]
     # words = [word for word in allWords if word not in englishStopwords]
     # create a dictionary of words 
     return dict(words)
     # return words
 
-def getWords(fileAggregateName, label):
+def getLabelledWords(fileAggregateName, label):
     words = []
     for fileid in movie_reviews.fileids(fileAggregateName):
         w = movie_reviews.words(fileid)
@@ -89,8 +123,8 @@ def mean(numbers):
     return float(sum(numbers)) / max(len(numbers), 1)
 
 def main(args):
-    postiveWords = getWords("pos", Constants.kPOS)
-    negativeWords = getWords("neg", Constants.kNEG)
+    negativeWords = getLabelledWords("neg", Constants.kNEG)
+    postiveWords = getLabelledWords("pos", Constants.kPOS)
 
     # Not a good idea to combine words and then split.
     # because +/- words maybe skewed/ may result in uneven split.
@@ -108,9 +142,15 @@ def main(args):
     # accuracy = util.accuracy(model, test)
     # print("Accuracy of model = ", accuracy*100)
 
-    reviews = np.array(postiveWords + negativeWords)
+    reviews = np.array(negativeWords + postiveWords)
+    
+    # np.set_printoptions(threshold=np.nan)
+    # print(reviews)
+
     # randomize the word distribution
-    random.shuffle(reviews)
+    np.random.shuffle(reviews)
+
+
 
     splitter = KFold(n_splits=10).split
     accuracies = []
@@ -129,7 +169,7 @@ def main(args):
         model = NaiveBayesClassifier.train(train)
         accuracy = util.accuracy(model, test)
         accuracies.append(accuracy)
-        print("Accuracy of model =", accuracy*100)
+        print("Accuracy of model = {0:.3f}".format(accuracy*100.0))
 
         # NLTK implementation of util.accuracy
         # count = 0
@@ -144,7 +184,7 @@ def main(args):
 
     # Take average accuracy.
     avgAcc = mean(accuracies)
-    print("Mean accuracy  =", avgAcc*100)
+    print("Mean accuracy  = {0:.3f}".format(avgAcc*100.0))
 
 
 if __name__ == "__main__":
