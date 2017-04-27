@@ -10,32 +10,28 @@ __license__ = "MIT License"
 __email__ = "suba5417@colorado.edu"
 __version__ = "0.1"
 
-# Python modules
-import sys
 import random
+import sys
+
 import numpy as np
-
 from nltk.corpus import movie_reviews as reviews
-
 from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
-
 from sklearn import svm
-from sklearn.linear_model import LogisticRegression
-from sklearn.neural_network import MLPClassifier
+from sklearn.base import BaseEstimator, TransformerMixin
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
+from sklearn.linear_model import LogisticRegression, SGDClassifier
+from sklearn.metrics import (accuracy_score, classification_report,
+                             precision_recall_fscore_support)
+from sklearn.model_selection import KFold
 from sklearn.naive_bayes import GaussianNB
 from sklearn.neighbors import KNeighborsClassifier
-from sklearn.tree import DecisionTreeClassifier
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.linear_model import SGDClassifier
-from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer
-from sklearn.preprocessing import LabelEncoder
-from sklearn.model_selection import KFold
+from sklearn.neural_network import MLPClassifier
 from sklearn.pipeline import Pipeline
-from sklearn.base import TransformerMixin, BaseEstimator
-from sklearn.metrics import classification_report
-from sklearn.metrics import accuracy_score
-from sklearn.metrics import precision_recall_fscore_support
+from sklearn.preprocessing import LabelEncoder
+from sklearn.tree import DecisionTreeClassifier
+
 
 class DocumentSanitizer(BaseEstimator, TransformerMixin):
     """

@@ -10,57 +10,43 @@ __license__ = "MIT License"
 __email__ = "suba5417@colorado.edu"
 __version__ = "0.1"
 
-# Python modules
-import sys
+import collections
+import itertools
 import random
 import string
-import collections
+# Python modules
+import sys
 
 import numpy as np
-
-import itertools
-from nltk.collocations import BigramCollocationFinder
-from nltk.metrics import BigramAssocMeasures
-from nltk.probability import FreqDist, ConditionalFreqDist
-
 # NLTK modules
 # import the movie review dataset
-from nltk import pos_tag
-from nltk import stem
-# from nltk.metrics import precision
-# from nltk.metrics import recall
-# from nltk.metrics import f_measure
-
-from nltk.stem import SnowballStemmer
-from nltk.corpus import movie_reviews
-
-from nltk.corpus import stopwords
-from nltk.tokenize import word_tokenize
-
+from nltk import pos_tag, stem
+# import nltk util for checking accuracy
 # nltk module also provides a Naive bayes classifier.
 # For now it's okay. Maybe in future i will use 
 # advanced classifier's from sklearn (scikit learn package).
-from nltk.classify import NaiveBayesClassifier
-from nltk.classify import DecisionTreeClassifier
-from nltk.classify import maxent
-
-# import nltk util for checking accuracy
-from nltk.classify import util
-
+from nltk.classify import (DecisionTreeClassifier, NaiveBayesClassifier,
+                           maxent, util)
 # import nltk's wrapper for sklearn modules
 from nltk.classify.scikitlearn import SklearnClassifier
-
-# scikit learn modules
-from sklearn.metrics import precision_recall_fscore_support
-from sklearn import metrics
-from sklearn.model_selection import KFold
-
+from nltk.collocations import BigramCollocationFinder
+from nltk.corpus import movie_reviews, stopwords
+from nltk.metrics import BigramAssocMeasures
+from nltk.probability import ConditionalFreqDist, FreqDist
+from nltk.stem import SnowballStemmer
+from nltk.tokenize import word_tokenize
+from sklearn import metrics, svm
 from sklearn.feature_extraction.text import TfidfTransformer
 from sklearn.feature_selection import SelectKBest, chi2
-from sklearn.naive_bayes import MultinomialNB
-from sklearn import svm
-from sklearn.naive_bayes import GaussianNB
+# scikit learn modules
+from sklearn.metrics import precision_recall_fscore_support
+from sklearn.model_selection import KFold
+from sklearn.naive_bayes import GaussianNB, MultinomialNB
 from sklearn.pipeline import Pipeline
+
+# from nltk.metrics import precision
+# from nltk.metrics import recall
+# from nltk.metrics import f_measure
 
 def getTopNBestWords(N=10000):
     wordDist = FreqDist()
@@ -142,14 +128,14 @@ def wordFeatures(allWords):
     # words = [(word, True) for word in allWords]
     # return dict(words)
 
-    allcleanWords = [wordSanitizer(word) for word in allWords]# if word not in englishStopwords]
+    allcleanWords = [wordSanitizer(word) for word in allWords if word not in englishStopwords]
     
     # ignore emptry strings
     cleanWords = list(filter(None, allcleanWords))
     # return bigram_word_feats(cleanWords)
 
     # get the tagged words and use them as features. 
-    cleanWords = pos_tag(cleanWords)
+    # cleanWords = pos_tag(cleanWords)
 
     # create bigram words
     bigrams = list(zip(*[cleanWords[i:] for i in range(2)]))
@@ -221,11 +207,11 @@ def classify(model, test):
     return np.array(trueLabels), np.array(predLabels)
 
 def main(args):
-    negativeWords = getLabelledWords("neg", Constants.kNEG)
-    postiveWords = getLabelledWords("pos", Constants.kPOS)
+    # negativeWords = getLabelledWords("neg", Constants.kNEG)
+    # postiveWords = getLabelledWords("pos", Constants.kPOS)
 
     # # Bigram model with top n best words.
-    # postiveWords, negativeWords = getPosNegLabelledWords()
+    postiveWords, negativeWords = getPosNegLabelledWords()
 
     # Not a good idea to combine words and then split.
     # because +/- words maybe skewed/ may result in uneven split.
@@ -278,8 +264,7 @@ def main(args):
         # model = maxent.MaxentClassifier.train(train, bernoulli=False, encoding=encoding, trace=0)
 
         # ================= Decision Tree classifier =================
-        # model = DecisionTreeClassifier.train(   \
-        #     train, entropy_cutoff=0, support_cutoff=0)
+        # model = DecisionTreeClassifier.train(train)
 
         # ================= Statistics about the model =================
         accuracy = util.accuracy(model, test)
