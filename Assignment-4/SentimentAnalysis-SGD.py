@@ -20,8 +20,10 @@ from nltk.corpus import movie_reviews as reviews
 from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
 
+from sklearn import svm
+from sklearn.linear_model import LogisticRegression
 from sklearn.linear_model import SGDClassifier
-from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer
 from sklearn.preprocessing import LabelEncoder
 from sklearn.model_selection import KFold
 from sklearn.pipeline import Pipeline
@@ -42,6 +44,8 @@ class DocumentSanitizer(BaseEstimator, TransformerMixin):
         return self
 
     def transform(self, X):
+        # Rmeove stop words, punctuations, numbers, stemming, lemmatization.
+        # 
         return X
 
 
@@ -60,19 +64,22 @@ def main():
     Y = labelTransformer.fit_transform(y)
 
     splitter = KFold(n_splits=10).split
+    accuracies = []
     
     formatTo3Decimals = lambda header, decimal: "{0}:{1:.3f}".format(header, decimal)
 
-    for i, (train_index, test_index) in enumerate(splitter(X)):
-        # print("Running for ", i)
-
+    for train_index, test_index in splitter(X):
         Xtrain, Xtest = X[train_index], X[test_index]
         Ytrain, Ytest = Y[train_index], Y[test_index]
 
         pipeline = Pipeline([
             ("DocumentProcessor", DocumentSanitizer()),
-            ("TfIdfVec", TfidfVectorizer(tokenizer=None, preprocessor=None, lowercase=False)),
-            ("SGDclassifier", SGDClassifier())
+            ("TfIdfVec", TfidfVectorizer(tokenizer=None, preprocessor=None, lowercase=False, 
+                stop_words="english",ngram_range=(1,2))),
+            # ("CountVec", CountVectorizer()),
+            # ("SGDclassifier", SGDClassifier())
+            # ("svc", svm.SVC(kernel='linear'))
+            ("logreg", LogisticRegression())
             ])
 
         model = pipeline.fit(Xtrain, Ytrain)
@@ -81,7 +88,9 @@ def main():
         precision, recall, f1, support = \
             precision_recall_fscore_support(Ytest, Ypred, beta = 1.0, average="macro")
 
-        print(formatTo3Decimals("Accuracy", accuracy_score(Ytest, Ypred)))
+        accuracy = accuracy_score(Ytest, Ypred)
+        accuracies.append(accuracy)
+        print(formatTo3Decimals("Accuracy", accuracy))
         # print(precision, recall, f1, support)
         print(
             formatTo3Decimals("Precision", precision),
@@ -90,6 +99,8 @@ def main():
             ";",
             formatTo3Decimals("F1", f1))
 
+    avgAcc = np.mean(accuracies)
+    print("Mean accuracy  = {0:.3f}".format(avgAcc*100.0))
 
 
 if __name__ == "__main__":
