@@ -1,7 +1,18 @@
 #!/usr/bin/python3
 
 """
-Sentiment analysis using NLTK package in Python
+Learning how to use sklearn pipeline
+
+Choose kind of object you want to build.
+1. ClassifierMixin - object to be used for classification task eg: Naive bayes
+2. RegressorMixin - used for regression tasks such as, linear regression.
+3. ClusterMixin - used for clustering task such as GMM, k-means
+4. TransformerMixin - Just a transformer takes input x and transforms to x'. 
+    eg: CountVectorizer, DictVectorizer, TfIdfVectorizer etc.
+
+And also subclass your class with BaseEstimator.
+
+
 """
 
 __author__ = "Sunil"
@@ -15,9 +26,12 @@ import sys
 import random
 
 from sklearn.pipeline import Pipeline
-from sklearn.base import TransformerMixin, BaseEstimator
+from sklearn.base import TransformerMixin, BaseEstimator, ClassifierMixin
 
 class SimpleTransformer1(BaseEstimator, TransformerMixin):
+    """
+    Simple transformer 1
+    """
     def __init__(self):
         pass
 
@@ -30,7 +44,7 @@ class SimpleTransformer1(BaseEstimator, TransformerMixin):
         x += str(SimpleTransformer1)
         return x
 
-class SimpleTransformer2(TransformerMixin):
+class SimpleTransformer2(BaseEstimator, TransformerMixin):
     def __init__(self):
         pass
 
@@ -43,7 +57,7 @@ class SimpleTransformer2(TransformerMixin):
         x += str(SimpleTransformer2)
         return x
 
-class SimpleEstimater1(object):
+class SimpleEstimater1(BaseEstimator, ClassifierMixin):
     def __init__(self):
         pass
 
@@ -54,6 +68,9 @@ class SimpleEstimater1(object):
     def predict(self, x):
         print("simple estimator-1 predict:", x)
         return x
+
+    def score(self, x, y=None):
+        return 0.0
 
 pipeline = Pipeline([
     ('st-1', SimpleTransformer1()),
