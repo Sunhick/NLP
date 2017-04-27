@@ -22,6 +22,11 @@ from nltk.tokenize import word_tokenize
 
 from sklearn import svm
 from sklearn.linear_model import LogisticRegression
+from sklearn.neural_network import MLPClassifier
+from sklearn.naive_bayes import GaussianNB
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.ensemble import RandomForestClassifier
 from sklearn.linear_model import SGDClassifier
 from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer
 from sklearn.preprocessing import LabelEncoder
@@ -41,13 +46,43 @@ class DocumentSanitizer(BaseEstimator, TransformerMixin):
         pass
 
     def fit(self, X, Y):
+        """
+        Fit. Nothing todo here.
+        """
         return self
 
     def transform(self, X):
         # Rmeove stop words, punctuations, numbers, stemming, lemmatization.
-        # 
+        # Bigram model if required. Since i'm using Tfidf it has an option to create 
+        # N-grams.
         return X
 
+class DenseTransformer(BaseEstimator, TransformerMixin):
+    """
+    Dense transformer converts the sparse np.ndarray to dense array.
+    Estimators like GaussianNB, etc deosn't work with sparse array(matrix).
+    """
+    def __init__(self):
+        pass
+
+    def transform(self, X, y=None, **fit_params):
+        """
+        Transform sparse np.ndarray X to dense.
+        """
+        return X.todense()
+
+    def fit_transform(self, X, y=None, **fit_params):
+        """
+        Fit transform
+        """
+        self.fit(X, y, **fit_params)
+        return self.transform(X)
+
+    def fit(self, X, y=None, **fit_params):
+        """
+        transform
+        """
+        return self
 
 def main():
     X = np.array([reviews.raw(fileid) for fileid in reviews.fileids()])
@@ -75,11 +110,17 @@ def main():
         pipeline = Pipeline([
             ("DocumentProcessor", DocumentSanitizer()),
             ("TfIdfVec", TfidfVectorizer(tokenizer=None, preprocessor=None, lowercase=False, 
-                stop_words="english",ngram_range=(1,2))),
+                ngram_range=(1,2))),
+            # ('to_dense', DenseTransformer()), 
             # ("CountVec", CountVectorizer()),
-            # ("SGDclassifier", SGDClassifier())
+            ("SGDclassifier", SGDClassifier())
             # ("svc", svm.SVC(kernel='linear'))
-            ("logreg", LogisticRegression())
+            # ("logreg", LogisticRegression())
+            # ("KNeighborsClassifier", KNeighborsClassifier(n_neighbors=3))
+            # ("MLPClassifier", MLPClassifier())
+            # ("DecisionTreeClassifier", DecisionTreeClassifier(max_depth=6))
+            # ("GaussianNB", GaussianNB()),
+            # ("RandomForestClassifier", RandomForestClassifier())
             ])
 
         model = pipeline.fit(Xtrain, Ytrain)
