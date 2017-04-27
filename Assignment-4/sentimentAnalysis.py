@@ -25,6 +25,7 @@ from nltk.probability import FreqDist, ConditionalFreqDist
 
 # NLTK modules
 # import the movie review dataset
+from nltk import pos_tag
 from nltk import stem
 # from nltk.metrics import precision
 # from nltk.metrics import recall
@@ -141,11 +142,14 @@ def wordFeatures(allWords):
     # words = [(word, True) for word in allWords]
     # return dict(words)
 
-    allcleanWords = [wordSanitizer(word) for word in allWords if word not in englishStopwords]
+    allcleanWords = [wordSanitizer(word) for word in allWords]# if word not in englishStopwords]
     
     # ignore emptry strings
     cleanWords = list(filter(None, allcleanWords))
     # return bigram_word_feats(cleanWords)
+
+    # get the tagged words and use them as features. 
+    cleanWords = pos_tag(cleanWords)
 
     # create bigram words
     bigrams = list(zip(*[cleanWords[i:] for i in range(2)]))
@@ -160,13 +164,17 @@ def wordFeatures(allWords):
     return dict(words)
 
 def BestBigrams(allWords, bestwords):
+    # with word-tag features
+    # allBestWords = [word for word in allWords if word in bestwords]
+    # taggedWords = pos_tag(allWords)
+    # return dict([(word, True) for word in taggedWords])
     return dict([(word, True) for word in allWords if word in bestwords])
 
 def getLabelledWords(fileAggregateName, label):
     words = []
     for fileid in movie_reviews.fileids(fileAggregateName):
         w = movie_reviews.words(fileid)
-        words.append((BestBigrams(w), label))
+        words.append((wordFeatures(w), label))
     return words
 
 def getPosNegLabelledWords():
@@ -183,7 +191,6 @@ def getPosNegLabelledWords():
         neg.append((BestBigrams(w, bestwords), Constants.kNEG))
     
     return pos, neg
-
 
 def randomSplit(data, percent):
     random.shuffle(data)
@@ -214,10 +221,12 @@ def classify(model, test):
     return np.array(trueLabels), np.array(predLabels)
 
 def main(args):
-    # negativeWords = getLabelledWords("neg", Constants.kNEG)
-    # postiveWords = getLabelledWords("pos", Constants.kPOS)
+    negativeWords = getLabelledWords("neg", Constants.kNEG)
+    postiveWords = getLabelledWords("pos", Constants.kPOS)
 
-    postiveWords, negativeWords = getPosNegLabelledWords()
+    # # Bigram model with top n best words.
+    # postiveWords, negativeWords = getPosNegLabelledWords()
+
     # Not a good idea to combine words and then split.
     # because +/- words maybe skewed/ may result in uneven split.
     # To increase changes of even distribution of words split then 
@@ -253,7 +262,7 @@ def main(args):
         # ================= SVC Classifier =================
         # pipeline = Pipeline([
         #     ('tfidf', TfidfTransformer()),
-        #     ('chi2', SelectKBest(chi2, k=1000)),
+        #     # ('chi2', SelectKBest(chi2, k=1000)),
         #     ('nb', svm.SVC())
         #     ])
         # model = SklearnClassifier(pipeline)
