@@ -53,33 +53,6 @@ class DocumentSanitizer(BaseEstimator, TransformerMixin):
         # N-grams.
         return X
 
-class DenseTransformer(BaseEstimator, TransformerMixin):
-    """
-    Dense transformer converts the sparse np.ndarray to dense array.
-    Estimators like GaussianNB, etc deosn't work with sparse array(matrix).
-    """
-    def __init__(self):
-        pass
-
-    def transform(self, X, y=None, **fit_params):
-        """
-        Transform sparse np.ndarray X to dense.
-        """
-        return X.todense()
-
-    def fit_transform(self, X, y=None, **fit_params):
-        """
-        Fit transform
-        """
-        self.fit(X, y, **fit_params)
-        return self.transform(X)
-
-    def fit(self, X, y=None, **fit_params):
-        """
-        transform
-        """
-        return self
-
 def main():
     X = np.array([reviews.raw(fileid) for fileid in reviews.fileids()])
     y = np.array([reviews.categories(fileid)[0] for fileid in reviews.fileids()])
@@ -96,6 +69,9 @@ def main():
 
     splitter = KFold(n_splits=10).split
     accuracies = []
+    precisions = []
+    recalls = []
+    fmeasures = []
     
     formatTo3Decimals = lambda header, decimal: "{0}:{1:.3f}".format(header, decimal)
 
@@ -107,7 +83,6 @@ def main():
             ("DocumentProcessor", DocumentSanitizer()),
             ("TfIdfVec", TfidfVectorizer(tokenizer=None, preprocessor=None, lowercase=False, 
                 ngram_range=(1,2))),
-            # ('to_dense', DenseTransformer()), 
             # ("CountVec", CountVectorizer()),
             ("SGDclassifier", SGDClassifier())
             # ("svc", svm.SVC(kernel='linear'))
@@ -126,19 +101,31 @@ def main():
             precision_recall_fscore_support(Ytest, Ypred, beta = 1.0, average="macro")
 
         accuracy = accuracy_score(Ytest, Ypred)
+
         accuracies.append(accuracy)
-        print(formatTo3Decimals("Accuracy", accuracy))
-        # print(precision, recall, f1, support)
-        print(
+        precisions.append(precision)
+        recalls.append(recall)
+        fmeasures.append(f1)
+
+        # print(formatTo3Decimals("Accuracy", accuracy))
+        # # print(precision, recall, f1, support)
+        # print(
+        #     formatTo3Decimals("Precision", precision),
+        #     ";",
+        #     formatTo3Decimals("Recall", recall),
+        #     ";",
+        #     formatTo3Decimals("F1", f1))
+    # Take average accuracy.
+    accuracy = np.mean(accuracies)
+    precision = np.mean(precisions)
+    recall = np.mean(recalls)
+    f1 = np.mean(fmeasures)
+
+    print(formatTo3Decimals("Accuracy", accuracy))
+    print("{0};{1};{2}".format(
             formatTo3Decimals("Precision", precision),
-            ";",
             formatTo3Decimals("Recall", recall),
-            ";",
-            formatTo3Decimals("F1", f1))
-
-    avgAcc = np.mean(accuracies)
-    print("Mean accuracy  = {0:.3f}".format(avgAcc*100.0))
-
+            formatTo3Decimals("F1", f1)))
 
 if __name__ == "__main__":
     main()

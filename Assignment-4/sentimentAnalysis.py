@@ -44,9 +44,21 @@ from sklearn.model_selection import KFold
 from sklearn.naive_bayes import GaussianNB, MultinomialNB
 from sklearn.pipeline import Pipeline
 
-# from nltk.metrics import precision
-# from nltk.metrics import recall
-# from nltk.metrics import f_measure
+# word lemmatizer. plurals to singular words
+lemmatizer = stem.wordnet.WordNetLemmatizer()
+
+# keep only the stem words
+stemmer = SnowballStemmer("english")
+
+# remove the punctuations and digits from words
+removeDigitsPunctuations = string.punctuation + string.digits
+
+# ignore english stop words
+englishStopwords = stopwords.words("english")
+
+class Constants(object):
+    kPOS = "+"
+    kNEG = "-"
 
 def getTopNBestWords(N=10000):
     wordDist = FreqDist()
@@ -60,82 +72,50 @@ def getTopNBestWords(N=10000):
         wordDist[word.lower()] += 1
         labelWordDist['neg'][word.lower()] += 1
      
-    pos_word_count = labelWordDist['pos'].N()
-    neg_word_count = labelWordDist['neg'].N()
-    total_word_count = pos_word_count + neg_word_count
-     
-    wordScores = {}
-     
+    pwords, nwords = labelWordDist['pos'].N(), labelWordDist['neg'].N()
+    twords = pwords + nwords
+    wordScores = dict()
+
     for word, freq in wordDist.items():
         # pos score
         pos_score = BigramAssocMeasures.chi_sq(labelWordDist['pos'][word], 
-            (freq, pos_word_count), total_word_count)
+            (freq, pwords), twords)
         # neg score
         neg_score = BigramAssocMeasures.chi_sq(labelWordDist['neg'][word], 
-            (freq, neg_word_count), total_word_count)
+            (freq, nwords), twords)
         # total word score.
         wordScores[word] = pos_score + neg_score
 
-    best = sorted(wordScores.items(), key=lambda w: w[1], reverse=True)[:N]
+    best = sorted(wordScores.items(), key=lambda w: w[1], reverse=True)
+    print(len(best))
+    best = best[:N]
     bestwords = set([w for w, s in best])
     return bestwords
-
-class Constants:
-    kPOS = "+"
-    kNEG = "-"
-
-class SentimentAnalyzer(object):
-    """
-    Movie review sentiment analysis
-
-    TODO: Figure out interfaces for this class. 
-
-    Should take training file(s) and create a model &
-    be able to predict the a given sentence/file has postive 
-    or negative rating and also to what extent can the model 
-    be trusted on the results.
-    """
-    def __init__(self):
-        pass
-
-# word lemmatizer. plurals to singular words
-lemmatizer = stem.wordnet.WordNetLemmatizer()
-
-# keep only the stem words
-stemmer = SnowballStemmer("english")
-
-# remove the punctuations and digits from words
-removeDigitsPunctuations = string.punctuation + string.digits
-
-# ignore english stop words
-englishStopwords = stopwords.words("english")
 
 def wordSanitizer(wordOrg):
     word = wordOrg
     word = word.translate(str.maketrans('','', removeDigitsPunctuations))
-    word = lemmatizer.lemmatize(word.lower())
-    word = stemmer.stem(word)
-    # print(wordOrg, "\t", word)
+    # word = lemmatizer.lemmatize(word.lower())
+    # word = stemmer.stem(word)
     return word
-
-def bigram_word_feats(words, score_fn=BigramAssocMeasures.chi_sq, n=200):
-    bigram_finder = BigramCollocationFinder.from_words(words)
-    bigrams = bigram_finder.nbest(score_fn, n)
-    return dict([(ngram, True) for ngram in itertools.chain(words, bigrams)])
 
 def wordFeatures(allWords):
     # without any processing
     # words = [(word, True) for word in allWords]
     # return dict(words)
 
-    allcleanWords = [wordSanitizer(word) for word in allWords if word not in englishStopwords]
+    allcleanWords = [wordSanitizer(word) for word in allWords] # if word not in englishStopwords]
     
     # ignore emptry strings
     cleanWords = list(filter(None, allcleanWords))
-    # return bigram_word_feats(cleanWords)
 
     # get the tagged words and use them as features. 
     # cleanWords = pos_tag(cleanWords)
+    # taggedWords = []
+    # for e in cleanWords:
+    #     taggedWords.append("/".join(e))
+
+    # cleanWords = taggedWords
 
     # create bigram words
     bigrams = list(zip(*[cleanWords[i:] for i in range(2)]))
@@ -178,26 +158,7 @@ def getPosNegLabelledWords():
     
     return pos, neg
 
-def randomSplit(data, percent):
-    random.shuffle(data)
-    size = len(data)
-    train_len = int(size*percent/100)
-    test_len = size - train_len
-    return data[:train_len], data[-test_len:]
-
-def mean(numbers):
-    return float(sum(numbers)) / max(len(numbers), 1)
-
 def classify(model, test):
-    # refsets = collections.defaultdict(set)
-    # testsets = collections.defaultdict(set)
-
-    # for i, (feats, label) in enumerate(test):
-    #     refsets[label].add(i)
-    #     observed = model.classify(feats)
-    #     testsets[observed].add(i)
-
-    # return refsets, testsets
     trueLabels, predLabels = [], []
     for feature, label in test:
         pred = model.classify(feature)
@@ -207,27 +168,11 @@ def classify(model, test):
     return np.array(trueLabels), np.array(predLabels)
 
 def main(args):
-    # negativeWords = getLabelledWords("neg", Constants.kNEG)
-    # postiveWords = getLabelledWords("pos", Constants.kPOS)
+    # postiveWords, negativeWords = getLabelledWords("pos", Constants.kPOS), \
+    #                 getLabelledWords("neg", Constants.kNEG)
 
     # # Bigram model with top n best words.
     postiveWords, negativeWords = getPosNegLabelledWords()
-
-    # Not a good idea to combine words and then split.
-    # because +/- words maybe skewed/ may result in uneven split.
-    # To increase changes of even distribution of words split then 
-    # individually and then combine.
-
-    # without kfold 
-    # posTrain, posTest = randomSplit(postiveWords, 80)
-    # negTrain, negTest = randomSplit(negativeWords, 80)
-
-    # train = posTrain + negTrain
-    # test = posTest + negTest
-
-    # model = NaiveBayesClassifier.train(train)
-    # accuracy = util.accuracy(model, test)
-    # print("Accuracy of model = ", accuracy*100)
 
     reviews = np.array(negativeWords + postiveWords)
     
@@ -239,6 +184,9 @@ def main(args):
 
     splitter = KFold(n_splits=10).split
     accuracies = []
+    precisions = []
+    recalls = []
+    fmeasures = []
 
     formatTo3Decimals = lambda header, decimal: "{0}:{1:.3f}".format(header, decimal)
 
@@ -256,6 +204,7 @@ def main(args):
 
         # ================= Naive bayes classifier =================
         model = NaiveBayesClassifier.train(train)
+        # print(model.show_most_informative_features(n=20))
 
         # ================= MaxEnt classifier =================
         # encoding = maxent.TypedMaxentFeatureEncoding.train( \
@@ -268,45 +217,38 @@ def main(args):
 
         # ================= Statistics about the model =================
         accuracy = util.accuracy(model, test)
-        accuracies.append(accuracy)
 
-        # predictions = model.classify(test)
-        # refset, predictset = classify(model, test)
         trueLabels, predLabels = classify(model, test)
         # print(precision_recall_fscore_support(trueLabels, predLabels, beta = 1.0, average="macro"))
         precision, recall, f1, support = \
             precision_recall_fscore_support(trueLabels, predLabels, beta = 1.0, average="macro")
 
-        print(formatTo3Decimals("Accuracy", accuracy))
-        # print(precision, recall, f1, support)
-        print(
-            formatTo3Decimals("Precision", precision),
-            ";",
-            formatTo3Decimals("Recall", recall),
-            ";",
-            formatTo3Decimals("F1", f1))
-        
-        # print("Accuracy:{0:.3f}".format(accuracy))
-        # print("Precision:{}",precision(refset[Constants.kPOS], predictset[Constants.kPOS]))
-        # print("Recall:", recall(refset[Constants.kPOS], predictset[Constants.kPOS]))
-        # print("F1:", f_measure(refset[Constants.kPOS], predictset[Constants.kPOS]))
+        accuracies.append(accuracy)
+        precisions.append(precision)
+        recalls.append(recall)
+        fmeasures.append(f1)
 
-
-        # NLTK implementation of util.accuracy
-        # count = 0
-        # tt = pipeline.fit_transform(test)
-        # print(tt)
-        # for data, label in test:
-        #     plabel = model.classify(pipeline.fit_transform(data))
-        #     if plabel == label:
-        #         count += 1
-
-        # print("custom accuracy =", (count/len(test))*100)
+        # print(formatTo3Decimals("Accuracy", accuracy))
+        # # print(precision, recall, f1, support)
+        # print(
+        #     formatTo3Decimals("Precision", precision),
+        #     ";",
+        #     formatTo3Decimals("Recall", recall),
+        #     ";",
+        #     formatTo3Decimals("F1", f1))
 
     # Take average accuracy.
-    avgAcc = mean(accuracies)
-    print("Mean accuracy  = {0:.3f}".format(avgAcc*100.0))
+    accuracy = np.mean(accuracies)
+    precision = np.mean(precisions)
+    recall = np.mean(recalls)
+    f1 = np.mean(fmeasures)
 
+    print(formatTo3Decimals("Accuracy", accuracy))
+    print("{0};{1};{2}".format(
+            formatTo3Decimals("Precision", precision),
+            formatTo3Decimals("Recall", recall),
+            formatTo3Decimals("F1", f1)
+        ))
 
 if __name__ == "__main__":
     main(sys.argv)
