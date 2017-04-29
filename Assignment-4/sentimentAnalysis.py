@@ -87,7 +87,7 @@ def getTopNBestWords(N=10000):
         wordScores[word] = pos_score + neg_score
 
     best = sorted(wordScores.items(), key=lambda w: w[1], reverse=True)
-    print(len(best))
+    # print(len(best))
     best = best[:N]
     bestwords = set([w for w, s in best])
     return bestwords
